@@ -133,6 +133,10 @@ Client status:
 - [docs/assembly-query-bridge.md](docs/assembly-query-bridge.md): entity query
   projection.
 - [docs/mechanics-api.md](docs/mechanics-api.md): public mechanics API surface.
+- [docs/api-artifacts.md](docs/api-artifacts.md): compile-time API and runtime
+  Maven artifact layout.
+- [examples/neoforge-consumer](examples/neoforge-consumer): minimal dependent
+  NeoForge mod using the public mechanics API artifact.
 - [docs/chunk-collision-pipeline.md](docs/chunk-collision-pipeline.md):
   terrain collision build pipeline.
 - [docs/runtime-profiling.md](docs/runtime-profiling.md): profiling and runtime

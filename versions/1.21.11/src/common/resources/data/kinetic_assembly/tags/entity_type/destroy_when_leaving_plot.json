@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "exposure:camera_stand", "required": false },
+    "#c:boats",
+    "minecraft:armor_stand",
+    "minecraft:minecart",
+    "minecraft:hopper_minecart",
+    "minecraft:chest_minecart",
+    "minecraft:furnace_minecart",
+    "minecraft:tnt_minecart"
+  ]
+}

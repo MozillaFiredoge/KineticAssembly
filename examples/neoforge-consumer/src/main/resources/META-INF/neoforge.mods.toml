@@ -1,0 +1,33 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="MIT"
+
+[[mods]]
+modId="kinetic_assembly_consumer_example"
+version="1.0.0"
+displayName="KineticAssembly Consumer Example"
+authors="Firedoge"
+description='''
+Minimal example mod that consumes the KineticAssembly public mechanics API.
+'''
+
+[[dependencies.kinetic_assembly_consumer_example]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.kinetic_assembly_consumer_example]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraft_version}]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.kinetic_assembly_consumer_example]]
+modId="kinetic_assembly"
+type="required"
+versionRange="[${kinetic_assembly_version},)"
+ordering="AFTER"
+side="BOTH"

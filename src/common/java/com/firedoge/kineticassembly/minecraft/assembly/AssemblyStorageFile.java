@@ -22,8 +22,8 @@ import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 
 class AssemblyStorageFile implements AutoCloseable {
-    static final String FILE_EXTENSION = ".slvls";
-    static final String SINGLE_FILE_EXTENSION = ".slvl";
+    static final String FILE_EXTENSION = ".assem";
+    static final String SINGLE_FILE_EXTENSION = ".assem";
     private static final int HEADER_BYTES = 4096;
     private static final int DEFAULT_SECTOR_BYTES = 4096;
     private static final int EXTERNAL_MASK = 16;

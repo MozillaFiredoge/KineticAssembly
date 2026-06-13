@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 
 final class AssemblyRegionFile extends AssemblyStorageFile {
-    static final String FILE_EXTENSION = ".slvlr";
+    static final String FILE_EXTENSION = ".assem";
     private static final int SECTOR_BYTES = 128;
     private static final int LOG_SIDE_LENGTH = 5;
 

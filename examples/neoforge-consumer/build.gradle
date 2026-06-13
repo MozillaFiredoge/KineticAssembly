@@ -1,0 +1,75 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+version = '1.0.0'
+group = 'com.firedoge.kineticassembly.example'
+
+def minecraft_version = '1.21.1'
+def neo_version = '21.1.230'
+def loader_version_range = '[1,)'
+def kinetic_assembly_version = '0.1.0-alpha.1'
+
+base {
+    archivesName = 'kinetic_assembly_consumer_example'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    def localKineticAssemblyRepo = file('../../repo')
+    if (localKineticAssemblyRepo.isDirectory()) {
+        maven {
+            name = 'LocalKineticAssembly'
+            url = localKineticAssemblyRepo.toURI()
+        }
+    }
+    maven {
+        name = 'KineticAssemblyPages'
+        url = uri('https://mozillafiredoge.github.io/KineticAssembly/maven')
+    }
+}
+
+neoForge {
+    version = neo_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        kinetic_assembly_consumer_example {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    compileOnly "com.firedoge.kineticassembly:kinetic_assembly-api-${minecraft_version}:${kinetic_assembly_version}"
+    runtimeOnly "com.firedoge.kineticassembly:kinetic_assembly-neoforge-${minecraft_version}:${kinetic_assembly_version}"
+}
+
+def replaceProperties = [
+        minecraft_version       : minecraft_version,
+        neo_version             : neo_version,
+        loader_version_range    : loader_version_range,
+        kinetic_assembly_version: kinetic_assembly_version,
+]
+
+tasks.named('processResources', ProcessResources) {
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

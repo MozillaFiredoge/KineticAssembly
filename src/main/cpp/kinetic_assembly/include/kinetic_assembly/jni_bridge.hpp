@@ -3,12 +3,12 @@
 #include <jni.h>
 
 extern "C" {
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeIsPhysXLinked(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeIsPhysXLinked(
     JNIEnv* env,
     jclass type
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateWorld(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateWorld(
     JNIEnv* env,
     jclass type,
     jdouble gravity_x,
@@ -19,32 +19,32 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jboolean enable_gpu_dynamics
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyWorld(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyWorld(
     JNIEnv* env,
     jclass type,
     jlong world_handle
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeStepWorld(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeStepWorld(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
     jfloat delta_seconds
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeIsWorldGpuDynamicsEnabled(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeIsWorldGpuDynamicsEnabled(
     JNIEnv* env,
     jclass type,
     jlong world_handle
 );
 
-JNIEXPORT jstring JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetWorldGpuDynamicsStatus(
+JNIEXPORT jstring JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetWorldGpuDynamicsStatus(
     JNIEnv* env,
     jclass type,
     jlong world_handle
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateBoxShape(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateBoxShape(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -53,7 +53,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat half_extent_z
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateStaticPlane(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateStaticPlane(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -63,7 +63,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jdouble distance
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateStaticBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateStaticBody(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -77,7 +77,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jdouble rotation_w
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicBody(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -92,7 +92,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat mass
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBody(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -108,7 +108,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat mass
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBodyWithMassProperties(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBodyWithMassProperties(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -130,7 +130,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jdouble inertia_z
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDeformableVolumeBox(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDeformableVolumeBox(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -149,14 +149,14 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jint voxels
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetDeformableVolumeInfo(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetDeformableVolumeInfo(
     JNIEnv* env,
     jclass type,
     jlong deformable_volume_handle,
     jintArray output
 );
 
-JNIEXPORT jint JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetDeformableVolumeVertices(
+JNIEXPORT jint JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetDeformableVolumeVertices(
     JNIEnv* env,
     jclass type,
     jlong deformable_volume_handle,
@@ -164,20 +164,20 @@ JNIEXPORT jint JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     jint max_vertices
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyDeformableVolume(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyDeformableVolume(
     JNIEnv* env,
     jclass type,
     jlong deformable_volume_handle
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetBodyPose(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetBodyPose(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
     jdoubleArray output
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetBodyPose(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetBodyPose(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -190,7 +190,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     jdouble rotation_w
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetLinearVelocity(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetLinearVelocity(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -199,14 +199,14 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     jdouble velocity_z
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetLinearVelocity(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetLinearVelocity(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
     jdoubleArray output
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetAngularVelocity(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetAngularVelocity(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -215,14 +215,14 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     jdouble velocity_z
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetAngularVelocity(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetAngularVelocity(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
     jdoubleArray output
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeReadBodyStates(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeReadBodyStates(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -230,7 +230,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     jdoubleArray output
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyLinearImpulse(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyLinearImpulse(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -239,7 +239,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     jdouble impulse_z
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyAngularImpulse(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyAngularImpulse(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -248,7 +248,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     jdouble impulse_z
 );
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyImpulseAtPoint(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyImpulseAtPoint(
     JNIEnv* env,
     jclass type,
     jlong body_handle,
@@ -260,7 +260,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     jdouble point_z
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -271,7 +271,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateFixedJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJointWithLocalFrames(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -283,7 +283,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDistanceJoint(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDistanceJoint(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -298,7 +298,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDistanceJointWithLocalAnchors(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDistanceJointWithLocalAnchors(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -314,7 +314,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateRevoluteJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateRevoluteJointWithLocalFrames(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -326,7 +326,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreatePrismaticJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreatePrismaticJointWithLocalFrames(
     JNIEnv* env,
     jclass type,
     jlong world_handle,
@@ -338,19 +338,19 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     jfloat break_torque
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyJoint(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyJoint(
     JNIEnv* env,
     jclass type,
     jlong joint_handle
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyBody(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyBody(
     JNIEnv* env,
     jclass type,
     jlong body_handle
 );
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyShape(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyShape(
     JNIEnv* env,
     jclass type,
     jlong shape_handle

@@ -13,6 +13,12 @@ This layer is intentionally above the raw PhysX backend and above the current
 debug `BlockDisplay` proxy path. External systems should treat PhysX scenes,
 native handles, and debug proxies as implementation details.
 
+Assembly is the gameplay-facing mechanics layer. Dependent mods should use this
+API for movable structures and physical systems instead of depending on
+`minecraft.assembly`, native bridge, backend, render, network, or mixin classes.
+
+The compile-time API artifact is described in `docs/api-artifacts.md`.
+
 ## Current Surface
 
 The first API slice supports server-side rigid dynamic boxes:

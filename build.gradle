@@ -9,15 +9,48 @@ def kinetic_assemblyFile = { String path -> new File(kinetic_assemblyRootDir, pa
 def nativeLinuxLibrary = kinetic_assemblyFile('build/native/linux-x86_64/libkinetic_assembly_native.so')
 def generatedNativeResourcesDir = layout.buildDirectory.dir('generated/nativeResources')
 def generatedVersionedJavaDir = layout.buildDirectory.dir('generated/sources/versioned/java')
+def generatedVersionedResourcesDir = layout.buildDirectory.dir('generated/sources/versioned/resources')
+def generatedApiJavaDir = layout.buildDirectory.dir('generated/sources/publicApi/java')
+def generatedApiEntrypointDir = layout.buildDirectory.dir('generated/sources/publicApiEntrypoint/java')
 def bundleNativeLinux = Boolean.parseBoolean(providers.gradleProperty('kinetic_assembly.bundleNativeLinux').getOrElse('false'))
 def targetMinecraftVersion = project.minecraft_version.toString()
+def apiStubModId = project.mod_id.toString()
 def versionedCommonJavaDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/common/java")
 def versionedNeoForgeJavaDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/neoforge/java")
 def versionedJavaOverlayDirs = [versionedCommonJavaDir, versionedNeoForgeJavaDir]
 def versionedJavaOverlayPaths = [] as Set
+def versionedCommonResourcesDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/common/resources")
+def versionedNeoForgeResourcesDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/neoforge/resources")
+def versionedResourceOverlayDirs = [versionedCommonResourcesDir, versionedNeoForgeResourcesDir]
+def versionedResourceOverlayPaths = [] as Set
+def publicApiSourcePaths = [
+        'com/firedoge/kineticassembly/api/package-info.java',
+        'com/firedoge/kineticassembly/api/PhysicsBoxCollider.java',
+        'com/firedoge/kineticassembly/api/PhysicsMassProperties.java',
+        'com/firedoge/kineticassembly/api/PhysicsPose.java',
+        'com/firedoge/kineticassembly/api/PhysicsQuaternion.java',
+        'com/firedoge/kineticassembly/api/PhysicsVector.java',
+        'com/firedoge/kineticassembly/mechanics/package-info.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsApi.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsBodyId.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsBodyRole.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsBodySnapshot.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsBodyType.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsBoxDefinition.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsCompoundBoxDefinition.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsJointId.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsJointSnapshot.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsJointType.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsWorld.java'
+]
 versionedJavaOverlayDirs.findAll { it.exists() }.each { overlayDir ->
     fileTree(overlayDir).matching { include '**/*.java' }.files.each { sourceFile ->
         versionedJavaOverlayPaths.add(overlayDir.toPath().relativize(sourceFile.toPath()).toString().replace(File.separatorChar, '/' as char))
+    }
+}
+versionedResourceOverlayDirs.findAll { it.exists() }.each { overlayDir ->
+    fileTree(overlayDir).files.each { resourceFile ->
+        versionedResourceOverlayPaths.add(overlayDir.toPath().relativize(resourceFile.toPath()).toString().replace(File.separatorChar, '/' as char))
     }
 }
 def versionedJavaReplacements = []
@@ -256,17 +289,78 @@ tasks.register('generateVersionedJavaSources', Sync) {
     includeEmptyDirs = false
 }
 
+tasks.register('generateVersionedResources', Sync) {
+    inputs.property('targetMinecraftVersion', targetMinecraftVersion)
+    inputs.property('versionedResourceOverlayPaths', versionedResourceOverlayPaths.join(';'))
+    versionedResourceOverlayDirs.findAll { it.exists() }.each { inputs.dir(it) }
+
+    from(kinetic_assemblyFile('src/common/resources')) {
+        exclude { details -> versionedResourceOverlayPaths.contains(details.relativePath.pathString) }
+    }
+    from(kinetic_assemblyFile('src/neoforge/resources')) {
+        exclude { details -> versionedResourceOverlayPaths.contains(details.relativePath.pathString) }
+    }
+    from(kinetic_assemblyFile('src/generated/resources')) {
+        exclude { details -> versionedResourceOverlayPaths.contains(details.relativePath.pathString) }
+    }
+    from(versionedCommonResourcesDir) {
+        include '**/*'
+    }
+    from(versionedNeoForgeResourcesDir) {
+        include '**/*'
+    }
+    into generatedVersionedResourcesDir
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    includeEmptyDirs = false
+}
+
+tasks.register('generateApiSources', Sync) {
+    dependsOn tasks.named('generateVersionedJavaSources')
+    inputs.property('targetMinecraftVersion', targetMinecraftVersion)
+    inputs.property('publicApiSourcePaths', publicApiSourcePaths.join(';'))
+
+    from(generatedVersionedJavaDir) {
+        include publicApiSourcePaths
+    }
+    into generatedApiJavaDir
+    includeEmptyDirs = false
+}
+
+tasks.register('generateApiEntrypoint') {
+    def outputFile = generatedApiEntrypointDir.map {
+        it.file('com/firedoge/kineticassembly/KineticAssembly.java')
+    }
+    inputs.property('mod_id', apiStubModId)
+    outputs.file(outputFile)
+
+    doLast {
+        File file = outputFile.get().asFile
+        file.parentFile.mkdirs()
+        file.text = """package com.firedoge.kineticassembly;
+
+import com.firedoge.kineticassembly.mechanics.MechanicsApi;
+
+public final class KineticAssembly {
+    public static final String MODID = "${apiStubModId}";
+
+    private KineticAssembly() {
+    }
+
+    public static MechanicsApi api() {
+        throw new IllegalStateException("KineticAssembly API stub is not backed by the runtime mod");
+    }
+}
+"""
+    }
+}
+
 sourceSets {
     main {
         java {
             setSrcDirs([generatedVersionedJavaDir])
         }
         resources {
-            setSrcDirs([
-                    kinetic_assemblyFile('src/common/resources'),
-                    kinetic_assemblyFile('src/neoforge/resources'),
-                    kinetic_assemblyFile('src/generated/resources')
-            ])
+            setSrcDirs([generatedVersionedResourcesDir])
             if (bundleNativeLinux) {
                 srcDir(generatedNativeResourcesDir)
             }
@@ -284,6 +378,24 @@ sourceSets {
             setSrcDirs([kinetic_assemblyFile('src/test/resources')])
         }
     }
+    api {
+        java {
+            setSrcDirs([generatedApiJavaDir, generatedApiEntrypointDir])
+        }
+        resources {
+            setSrcDirs([])
+        }
+        compileClasspath += sourceSets.main.compileClasspath
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn tasks.named('generateVersionedResources')
+}
+
+tasks.named('compileApiJava') {
+    dependsOn tasks.named('generateApiSources')
+    dependsOn tasks.named('generateApiEntrypoint')
 }
 
 repositories {
@@ -428,10 +540,42 @@ sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
 
 // Example configuration to allow publishing using the maven-publish plugin
+tasks.register('apiJar', Jar) {
+    group = 'build'
+    description = 'Builds the public KineticAssembly API artifact.'
+    dependsOn tasks.named('apiClasses')
+    archiveBaseName = "${mod_id}-api-${targetMinecraftVersion}"
+    from sourceSets.api.output
+}
+
+tasks.register('apiSourcesJar', Jar) {
+    group = 'build'
+    description = 'Builds the public KineticAssembly API sources artifact.'
+    dependsOn tasks.named('generateApiSources')
+    dependsOn tasks.named('generateApiEntrypoint')
+    archiveBaseName = "${mod_id}-api-${targetMinecraftVersion}"
+    archiveClassifier = 'sources'
+    from sourceSets.api.allSource
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
+            artifactId = "${mod_id}-neoforge-${targetMinecraftVersion}"
             from components.java
+            pom {
+                name = "${mod_name} NeoForge ${targetMinecraftVersion}"
+                description = 'KineticAssembly NeoForge runtime mod.'
+            }
+        }
+        register('mavenApi', MavenPublication) {
+            artifactId = "${mod_id}-api-${targetMinecraftVersion}"
+            artifact tasks.named('apiJar')
+            artifact tasks.named('apiSourcesJar')
+            pom {
+                name = "${mod_name} API ${targetMinecraftVersion}"
+                description = 'Compile-only KineticAssembly mechanics API for dependent mods.'
+            }
         }
     }
     repositories {

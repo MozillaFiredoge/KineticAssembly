@@ -4,14 +4,14 @@
 
 #include <vector>
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeIsPhysXLinked(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeIsPhysXLinked(
     JNIEnv*,
     jclass
 ) {
     return kinetic_assembly::is_physx_linked() ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateWorld(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateWorld(
     JNIEnv*,
     jclass,
     jdouble gravity_x,
@@ -31,7 +31,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyWorld(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyWorld(
     JNIEnv*,
     jclass,
     jlong world_handle
@@ -39,7 +39,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     kinetic_assembly::destroy_world(static_cast<kinetic_assembly::WorldHandle>(world_handle));
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeStepWorld(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeStepWorld(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -48,7 +48,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     kinetic_assembly::step_world(static_cast<kinetic_assembly::WorldHandle>(world_handle), delta_seconds);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeIsWorldGpuDynamicsEnabled(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeIsWorldGpuDynamicsEnabled(
     JNIEnv*,
     jclass,
     jlong world_handle
@@ -56,7 +56,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return kinetic_assembly::is_world_gpu_dynamics_enabled(static_cast<kinetic_assembly::WorldHandle>(world_handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jstring JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetWorldGpuDynamicsStatus(
+JNIEXPORT jstring JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetWorldGpuDynamicsStatus(
     JNIEnv* env,
     jclass,
     jlong world_handle
@@ -64,7 +64,7 @@ JNIEXPORT jstring JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysX
     return env->NewStringUTF(kinetic_assembly::world_gpu_dynamics_status(static_cast<kinetic_assembly::WorldHandle>(world_handle)).c_str());
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateBoxShape(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateBoxShape(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -80,7 +80,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateStaticPlane(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateStaticPlane(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -98,7 +98,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateStaticBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateStaticBody(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -124,7 +124,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicBody(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -152,7 +152,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBody(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBody(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -192,7 +192,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(body);
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBodyWithMassProperties(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDynamicCompoundBoxBodyWithMassProperties(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -244,7 +244,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(body);
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDeformableVolumeBox(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDeformableVolumeBox(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -280,7 +280,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetDeformableVolumeInfo(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetDeformableVolumeInfo(
     JNIEnv* env,
     jclass,
     jlong deformable_volume_handle,
@@ -303,7 +303,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return JNI_TRUE;
 }
 
-JNIEXPORT jint JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetDeformableVolumeVertices(
+JNIEXPORT jint JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetDeformableVolumeVertices(
     JNIEnv* env,
     jclass,
     jlong deformable_volume_handle,
@@ -326,7 +326,7 @@ JNIEXPORT jint JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     return static_cast<jint>(copied);
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyDeformableVolume(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyDeformableVolume(
     JNIEnv*,
     jclass,
     jlong deformable_volume_handle
@@ -334,7 +334,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     kinetic_assembly::destroy_deformable_volume(static_cast<std::uint64_t>(deformable_volume_handle));
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetBodyPose(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetBodyPose(
     JNIEnv* env,
     jclass,
     jlong body_handle,
@@ -351,7 +351,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return JNI_TRUE;
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetBodyPose(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetBodyPose(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -375,7 +375,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     );
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetLinearVelocity(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetLinearVelocity(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -391,7 +391,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     );
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetLinearVelocity(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetLinearVelocity(
     JNIEnv* env,
     jclass,
     jlong body_handle,
@@ -408,7 +408,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return JNI_TRUE;
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeSetAngularVelocity(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeSetAngularVelocity(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -424,7 +424,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     );
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeGetAngularVelocity(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeGetAngularVelocity(
     JNIEnv* env,
     jclass,
     jlong body_handle,
@@ -441,7 +441,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return JNI_TRUE;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeReadBodyStates(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeReadBodyStates(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -488,7 +488,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     return success ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyLinearImpulse(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyLinearImpulse(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -504,7 +504,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     ) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyAngularImpulse(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyAngularImpulse(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -520,7 +520,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     ) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeApplyImpulseAtPoint(
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyImpulseAtPoint(
     JNIEnv*,
     jclass,
     jlong body_handle,
@@ -542,7 +542,7 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_Phys
     ) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -562,7 +562,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateFixedJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJointWithLocalFrames(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -593,7 +593,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(joint);
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDistanceJoint(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDistanceJoint(
     JNIEnv*,
     jclass,
     jlong world_handle,
@@ -621,7 +621,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     ));
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateDistanceJointWithLocalAnchors(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateDistanceJointWithLocalAnchors(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -660,7 +660,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(joint);
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreateRevoluteJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateRevoluteJointWithLocalFrames(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -691,7 +691,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(joint);
 }
 
-JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeCreatePrismaticJointWithLocalFrames(
+JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreatePrismaticJointWithLocalFrames(
     JNIEnv* env,
     jclass,
     jlong world_handle,
@@ -722,7 +722,7 @@ JNIEXPORT jlong JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNa
     return static_cast<jlong>(joint);
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyJoint(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyJoint(
     JNIEnv*,
     jclass,
     jlong joint_handle
@@ -730,7 +730,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     kinetic_assembly::destroy_joint(static_cast<std::uint64_t>(joint_handle));
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyBody(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyBody(
     JNIEnv*,
     jclass,
     jlong body_handle
@@ -738,7 +738,7 @@ JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNat
     kinetic_assembly::destroy_body(static_cast<std::uint64_t>(body_handle));
 }
 
-JNIEXPORT void JNICALL Java_com_firedoge_kinetic_assembly_backend_physx_PhysXNative_nativeDestroyShape(
+JNIEXPORT void JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeDestroyShape(
     JNIEnv*,
     jclass,
     jlong shape_handle

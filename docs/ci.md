@@ -17,6 +17,28 @@ requiring the local NVIDIA PhysX checkout. The `PhysX/` directory is ignored and
 is expected to be supplied locally by developers who are building the native
 bridge.
 
+## Maven Publishing
+
+The Maven publishing workflow is separate from the normal CI build:
+
+```text
+.github/workflows/publish-maven.yml
+```
+
+It runs on `v*` tags and manual dispatch. The workflow runs `./gradlew publish`
+for all Stonecutter nodes, then merges the generated local `repo/` Maven layout
+into the `gh-pages` branch under:
+
+```text
+maven/
+```
+
+The public Maven URL is:
+
+```text
+https://mozillafiredoge.github.io/KineticAssembly/maven
+```
+
 ## Native Builds
 
 Native packaging is opt-in:
