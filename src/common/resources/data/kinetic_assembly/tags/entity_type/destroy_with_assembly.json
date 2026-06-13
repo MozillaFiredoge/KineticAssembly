@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "#kinetic_assembly:super_glue",
+    { "id": "create:seat", "required": false },
+    "#kinetic_assembly:create_contraption"
+  ]
+}

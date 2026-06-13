@@ -1,0 +1,71 @@
+### Gradle ###
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+!**/src/**/out/
+
+### IDEs ###
+.idea/
+.vscode/
+.eclipse/
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+*.iws
+*.iml
+*.ipr
+bin/
+!**/src/**/bin/
+
+### Local agent/tool state ###
+.agents/
+.codex/
+
+### OS and editor noise ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+### Logs and crash output ###
+*.log
+hs_err_pid*.log
+replay_pid*.log
+crash-reports/
+logs/
+
+### Minecraft modding runtime ###
+run/
+.run/
+repo/
+!**/src/**/run/
+!**/src/**/repo/
+**/src/generated/**/.cache/
+
+### Native/CMake outputs ###
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+*.ninja
+.ninja_*
+*.so
+*.dll
+*.dylib
+*.pdb
+
+### Bundled native placeholders are tracked; binaries are generated ###
+src/main/resources/native/**/*.so
+src/main/resources/native/**/*.dll
+src/main/resources/native/**/*.dylib
+!src/main/resources/native/**/.gitkeep
+
+### NVIDIA PhysX checkout and build products ###
+/PhysX/
+/physx/

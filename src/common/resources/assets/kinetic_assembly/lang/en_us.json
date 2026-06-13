@@ -1,0 +1,10 @@
+{
+  "kinetic_assembly.configuration.title": "KineticAssembly Configs",
+  "kinetic_assembly.configuration.section.kinetic_assembly.common.toml": "KineticAssembly Configs",
+  "kinetic_assembly.configuration.section.kinetic_assembly.common.toml.title": "KineticAssembly Configs",
+  "kinetic_assembly.configuration.loadNativeOnStartup": "Load Native Backend On Startup",
+  "kinetic_assembly.configuration.defaultBackend": "Default Physics Backend",
+  "kinetic_assembly.configuration.fixedTimeStep": "Fixed Physics Time Step",
+  "kinetic_assembly.configuration.maxSubSteps": "Maximum Physics Substeps",
+  "kinetic_assembly.configuration.debugLogging": "Debug Physics Logging"
+}

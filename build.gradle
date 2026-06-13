@@ -1,0 +1,500 @@
+version = mod_version
+group = mod_group_id
+
+def kinetic_assemblyRootDir = project.ext.has('kinetic_assemblyRootDir')
+        ? project.ext.kinetic_assemblyRootDir
+        : rootProject.projectDir
+def kinetic_assemblyFile = { String path -> new File(kinetic_assemblyRootDir, path) }
+
+def nativeLinuxLibrary = kinetic_assemblyFile('build/native/linux-x86_64/libkinetic_assembly_native.so')
+def generatedNativeResourcesDir = layout.buildDirectory.dir('generated/nativeResources')
+def generatedVersionedJavaDir = layout.buildDirectory.dir('generated/sources/versioned/java')
+def bundleNativeLinux = Boolean.parseBoolean(providers.gradleProperty('kinetic_assembly.bundleNativeLinux').getOrElse('false'))
+def targetMinecraftVersion = project.minecraft_version.toString()
+def versionedCommonJavaDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/common/java")
+def versionedNeoForgeJavaDir = kinetic_assemblyFile("versions/${targetMinecraftVersion}/src/neoforge/java")
+def versionedJavaOverlayDirs = [versionedCommonJavaDir, versionedNeoForgeJavaDir]
+def versionedJavaOverlayPaths = [] as Set
+versionedJavaOverlayDirs.findAll { it.exists() }.each { overlayDir ->
+    fileTree(overlayDir).matching { include '**/*.java' }.files.each { sourceFile ->
+        versionedJavaOverlayPaths.add(overlayDir.toPath().relativize(sourceFile.toPath()).toString().replace(File.separatorChar, '/' as char))
+    }
+}
+def versionedJavaReplacements = []
+
+if (targetMinecraftVersion == '1.21.11') {
+    versionedJavaReplacements.addAll([
+            ['net.minecraft.resources.ResourceLocation', 'net.minecraft.resources.Identifier'],
+            ['ResourceLocation', 'Identifier'],
+            ['net.minecraft.world.entity.projectile.AbstractArrow', 'net.minecraft.world.entity.projectile.arrow.AbstractArrow'],
+            ['net/minecraft/world/entity/projectile/AbstractArrow', 'net/minecraft/world/entity/projectile/arrow/AbstractArrow'],
+            ['net.minecraft.world.entity.projectile.ThrownTrident', 'net.minecraft.world.entity.projectile.arrow.ThrownTrident'],
+            ['net/minecraft/world/entity/projectile/ThrownTrident', 'net/minecraft/world/entity/projectile/arrow/ThrownTrident'],
+            ['net.minecraft.world.entity.projectile.AbstractHurtingProjectile', 'net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile'],
+            ['net/minecraft/world/entity/projectile/AbstractHurtingProjectile', 'net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile'],
+            ['net.minecraft.world.entity.vehicle.AbstractMinecart', 'net.minecraft.world.entity.vehicle.minecart.AbstractMinecart'],
+            ['net/minecraft/world/entity/vehicle/AbstractMinecart', 'net/minecraft/world/entity/vehicle/minecart/AbstractMinecart'],
+            ['net.minecraft.world.entity.vehicle.Boat', 'net.minecraft.world.entity.vehicle.boat.Boat'],
+            ['net/minecraft/world/entity/vehicle/Boat', 'net/minecraft/world/entity/vehicle/boat/Boat'],
+            ['net.minecraft.world.entity.vehicle.ChestBoat', 'net.minecraft.world.entity.vehicle.boat.ChestBoat'],
+            ['net/minecraft/world/entity/vehicle/ChestBoat', 'net/minecraft/world/entity/vehicle/boat/ChestBoat'],
+            ['net.minecraft.world.entity.decoration.Painting', 'net.minecraft.world.entity.decoration.painting.Painting'],
+            ['net/minecraft/world/entity/decoration/Painting', 'net/minecraft/world/entity/decoration/painting/Painting'],
+            ['net.minecraft.world.level.GameRules', 'net.minecraft.world.level.gamerules.GameRules'],
+            ['net.minecraft.client.renderer.RenderType', 'net.minecraft.client.renderer.rendertype.RenderType'],
+            ['net/minecraft/client/renderer/RenderType', 'net/minecraft/client/renderer/rendertype/RenderType'],
+            ['net.neoforged.neoforge.client.model.data.ModelData', 'net.neoforged.neoforge.model.data.ModelData'],
+            ['level.dimension().location()', 'level.dimension().identifier()'],
+            ['assembly.levelKey().location()', 'assembly.levelKey().identifier()'],
+            ['dimension.location()', 'dimension.identifier()'],
+            ['player.serverLevel()', 'player.level()'],
+            ['serverPlayer.serverLevel()', 'serverPlayer.level()'],
+            ['instance.serverLevel()', 'instance.level()'],
+            ['getMinBuildHeight()', 'getMinY()'],
+            ['getMaxBuildHeight()', 'getMaxY()'],
+            ['getMinSection()', 'getMinSectionY()'],
+            ['getGameProfile().getId()', 'getGameProfile().id()'],
+            ['getGameProfile().getName()', 'getGameProfile().name()'],
+            ['source.hasPermission(Commands.LEVEL_GAMEMASTERS)', 'Commands.hasPermission(Commands.LEVEL_GAMEMASTERS).test(source)'],
+            ['player.getServer()', 'player.level().getServer()'],
+            ['Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true)', 'Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true)'],
+            ['minecraft.getTimer().getGameTimeDeltaPartialTick(false)', 'minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false)'],
+            ['minecraft.getTimer().getGameTimeDeltaPartialTick(true)', 'minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true)'],
+            ['RenderSystem.isOnRenderThreadOrInit()', 'RenderSystem.isOnRenderThread()'],
+            ['GameRules.RULE_GLOBAL_SOUND_EVENTS', 'GameRules.GLOBAL_SOUND_EVENTS'],
+            ['GameRules.RULE_DOBLOCKDROPS', 'GameRules.BLOCK_DROPS'],
+            ['InteractionResult.sidedSuccess(level.isClientSide)', 'level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER'],
+            ['level.isClientSide', 'level.isClientSide()'],
+            ['level().isClientSide', 'level().isClientSide()'],
+            ['level.getGameRules().getBoolean(', 'level.getGameRules().get('],
+            ['kinetic_assembly$self().getGameRules().getBoolean(', 'kinetic_assembly$self().getGameRules().get('],
+            ['level.getDataStorage().save()', 'level.getDataStorage().saveAndJoin()'],
+            ['entity.level().isClientSide', 'entity.level().isClientSide()'],
+            ['playSeededSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FFJ)V', 'playSeededSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/Holder;Lnet/minecraft/sounds/SoundSource;FFJ)V'],
+            ['addParticle(Lnet/minecraft/core/particles/ParticleOptions;ZDDDDDD)V', 'addParticle(Lnet/minecraft/core/particles/ParticleOptions;ZZDDDDDD)V'],
+            ['sendParticles(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/particles/ParticleOptions;ZDDDIDDDD)Z', 'sendParticles(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/particles/ParticleOptions;ZZDDDIDDDD)Z'],
+            ['canInteractWithBlock', 'isWithinBlockInteractionRange'],
+            ['isNaturalSpawningAllowed(Lnet/minecraft/world/level/ChunkPos;)Z', 'canSpawnEntitiesInChunk(Lnet/minecraft/world/level/ChunkPos;)Z'],
+            ['direction.getNormal()', 'direction.getUnitVec3i()'],
+            ['Direction.getNearest(', 'Direction.getApproximateNearest('],
+            ['entity.moveTo(', 'entity.snapTo('],
+            ['entity.kill()', 'entity.kill((net.minecraft.server.level.ServerLevel) entity.level())'],
+            ['entity.load(tag)', 'com.firedoge.kineticassembly.minecraft.compat.MinecraftDataCompat.loadEntity(entity, tag)'],
+            ['new EntityCollisionContext(entity)', 'new EntityCollisionContext(entity, false, false)'],
+            ['super(entity);', 'super(entity, false, false);'],
+            ['void moveTo(double x, double y, double z)', 'void snapTo(double x, double y, double z)'],
+            ['protected abstract boolean canFallAtLeast(double x, double z, float maxUpStep);', 'private boolean canFallAtLeast(double x, double z, double maxUpStep) { throw new AssertionError(); }'],
+            ['target = "Lnet/minecraft/world/entity/Entity;setOnGroundWithMovement(ZLnet/minecraft/world/phys/Vec3;)V"', 'target = "Lnet/minecraft/world/entity/Entity;setOnGroundWithMovement(ZZLnet/minecraft/world/phys/Vec3;)V"'],
+            ['state.entityInside(level, pos, entity)', 'state.entityInside(level, pos, entity, net.minecraft.world.entity.InsideBlockEffectApplier.NOOP, false)'],
+            ['chunk.getTicksForSerialization()', 'chunk.getTicksForSerialization(level.getGameTime())'],
+            ['chunk.setBlockState(plotPos, blockState, isMoving)', 'chunk.setBlockState(plotPos, blockState, isMoving ? 64 : 0)'],
+            ['chunk.setBlockState(plotPos, block.blockState(), false)', 'chunk.setBlockState(plotPos, block.blockState(), 0)'],
+            ['level.neighborChanged(plotPos, currentBlock, plotPos)', 'level.neighborChanged(plotPos, currentBlock, null)'],
+            ['level.neighborChanged(plotPos, level.getBlockState(neighborPos).getBlock(), neighborPos)', 'level.neighborChanged(plotPos, level.getBlockState(neighborPos).getBlock(), null)'],
+            ['DustParticleOptions(new Vector3f(0.15F, 0.55F, 1.0F), 1.0F)', 'DustParticleOptions(0x268CFF, 1.0F)'],
+            ['DustParticleOptions(new Vector3f(1.0F, 0.15F, 0.1F), 1.0F)', 'DustParticleOptions(0xFF261A, 1.0F)'],
+            ['DustParticleOptions(new Vector3f(0.75F, 0.2F, 1.0F), 1.0F)', 'DustParticleOptions(0xBF33FF, 1.0F)'],
+            ['TicketType<AssemblyId> ASSEMBLY_LOADED_TICKET_TYPE = TicketType.create(\n            "kinetic_assembly_assembly_loaded",\n            (first, second) -> first.value().compareTo(second.value())\n    );', 'TicketType ASSEMBLY_LOADED_TICKET_TYPE = new TicketType(TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION | TicketType.FLAG_KEEP_DIMENSION_ACTIVE);'],
+            ['level.getChunkSource().addRegionTicket(\n                ASSEMBLY_LOADED_TICKET_TYPE,\n                chunkPos,\n                ASSEMBLY_LOADED_TICKET_DISTANCE,\n                id,\n                true\n        );', 'level.getChunkSource().addTicketWithRadius(ASSEMBLY_LOADED_TICKET_TYPE, chunkPos, ASSEMBLY_LOADED_TICKET_DISTANCE);'],
+            ['level.getChunkSource().removeRegionTicket(\n                        ASSEMBLY_LOADED_TICKET_TYPE,\n                        chunkPos,\n                        ASSEMBLY_LOADED_TICKET_DISTANCE,\n                        assemblyEntry.getKey(),\n                        true\n                );', 'level.getChunkSource().removeTicketWithRadius(ASSEMBLY_LOADED_TICKET_TYPE, chunkPos, ASSEMBLY_LOADED_TICKET_DISTANCE);']
+    ])
+}
+
+def versionedJavaSoundHandlerParamPending = false
+def versionedJavaClientParticleForceParamPending = false
+def versionedJavaServerParticleForceParamPending = false
+def versionedJavaAssemblyGroundParamPending = false
+def versionedJavaPlotLevelEventBroadcastPending = false
+def versionedJavaStartRidingHandlerParamPending = false
+def transformVersionedJavaLine = { String line ->
+    String replaced = line
+    versionedJavaReplacements.each { pair ->
+        replaced = replaced.replace(pair[0], pair[1])
+    }
+    if (targetMinecraftVersion == '1.21.11') {
+        boolean replaceSoundHandlerParam = versionedJavaSoundHandlerParamPending
+                && replaced == '            Player player,'
+        boolean appendClientParticleDecreasedParam = versionedJavaClientParticleForceParamPending
+                && replaced == '            boolean forceAlwaysRender,'
+        boolean appendServerParticleForceParam = versionedJavaServerParticleForceParamPending
+                && replaced == '            boolean longDistance,'
+        boolean appendAssemblyGroundHorizontalParam = versionedJavaAssemblyGroundParamPending
+                && replaced == '            boolean onGround,'
+        boolean replacePlotLevelEventBroadcastExcept = versionedJavaPlotLevelEventBroadcastPending
+                && replaced == '                player,'
+        boolean appendStartRidingCheckCanRideParam = versionedJavaStartRidingHandlerParamPending
+                && replaced == '            boolean force,'
+        boolean replaceInlineStartRidingCheckCanRideParam = versionedJavaStartRidingHandlerParamPending
+                && replaced.contains('boolean force, CallbackInfoReturnable<Boolean> cir')
+        versionedJavaSoundHandlerParamPending = false
+        if (replaceSoundHandlerParam) {
+            replaced = '            Entity player,'
+        } else if (appendClientParticleDecreasedParam) {
+            replaced = '            boolean forceAlwaysRender,\n            boolean decreased,'
+            versionedJavaClientParticleForceParamPending = false
+        } else if (appendServerParticleForceParam) {
+            replaced = '            boolean longDistance,\n            boolean force,'
+            versionedJavaServerParticleForceParamPending = false
+        } else if (appendAssemblyGroundHorizontalParam) {
+            replaced = '            boolean onGround,\n            boolean vanillaHorizontalCollision,'
+            versionedJavaAssemblyGroundParamPending = false
+        } else if (replacePlotLevelEventBroadcastExcept) {
+            replaced = '                player instanceof Player except ? except : null,'
+            versionedJavaPlotLevelEventBroadcastPending = false
+        } else if (appendStartRidingCheckCanRideParam) {
+            replaced = '            boolean force,\n            boolean checkCanRide,'
+            versionedJavaStartRidingHandlerParamPending = false
+        } else if (replaceInlineStartRidingCheckCanRideParam) {
+            replaced = replaced.replace(
+                    'boolean force, CallbackInfoReturnable<Boolean> cir',
+                    'boolean force, boolean checkCanRide, CallbackInfoReturnable<Boolean> cir'
+            )
+            versionedJavaStartRidingHandlerParamPending = false
+        }
+        replaced = replaced
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getByte\("([^"]+)"\)/, '$1.getByteOr("$2", (byte) 0)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getShort\("([^"]+)"\)/, '$1.getShortOr("$2", (short) 0)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getInt\("([^"]+)"\)/, '$1.getIntOr("$2", 0)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getLong\("([^"]+)"\)/, '$1.getLongOr("$2", 0L)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getFloat\("([^"]+)"\)/, '$1.getFloatOr("$2", 0.0F)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getDouble\("([^"]+)"\)/, '$1.getDoubleOr("$2", 0.0D)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getString\("([^"]+)"\)/, '$1.getStringOr("$2", "")')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getBoolean\("([^"]+)"\)/, '$1.getBooleanOr("$2", false)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getCompound\("([^"]+)"\)/, '$1.getCompoundOrEmpty("$2")')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getList\("([^"]+)",\s*Tag\.TAG_[A-Z_]+\)/, '$1.getListOrEmpty("$2")')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getCompound\(([^)]+)\)/, '$1.getCompoundOrEmpty($2)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getList\(([^,)]+),\s*Tag\.TAG_[A-Z_]+\)/, '$1.getListOrEmpty($2)')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getIntArray\("([^"]+)"\)/, '$1.getIntArray("$2").orElse(new int[0])')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getLongArray\("([^"]+)"\)/, '$1.getLongArray("$2").orElse(new long[0])')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.contains\("([^"]+)",\s*Tag\.TAG_[A-Z_]+\)/, '$1.contains("$2")')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.hasUUID\("([^"]+)"\)/, '$1.read("$2", net.minecraft.core.UUIDUtil.CODEC).isPresent()')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getUUID\("([^"]+)"\)/, '$1.read("$2", net.minecraft.core.UUIDUtil.CODEC).orElseThrow()')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.putUUID\("([^"]+)",\s*(.*)\);/, '$1.store("$2", net.minecraft.core.UUIDUtil.CODEC, $3);')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.hasUUID\(([^)]+)\)/, '$1.read($2, net.minecraft.core.UUIDUtil.CODEC).isPresent()')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getUUID\(([^)]+)\)/, '$1.read($2, net.minecraft.core.UUIDUtil.CODEC).orElseThrow()')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.putUUID\(([^,]+),\s*(.*)\);/, '$1.store($2, net.minecraft.core.UUIDUtil.CODEC, $3);')
+                .replaceAll(/([A-Za-z0-9_$.]+)\.getAllKeys\(\)/, '$1.keySet()')
+                .replace('isClientSide()()', 'isClientSide()')
+                .replace('hasImpulse = true;', 'hurtMarked = true;')
+                .replace('public abstract ServerLevel serverLevel();', 'public abstract ServerLevel level();')
+                .replace('serverLevel()', 'level()')
+                .replace('super(level, pos, yRot, profile);', 'super(level, profile);')
+                .replace('target = "Lnet/minecraft/server/level/ServerPlayer;absMoveTo(DDDFF)V"', 'target = "Lnet/minecraft/server/level/ServerPlayer;absSnapTo(DDDFF)V"')
+                .replace('startRiding(vehicle, true);', 'startRiding(vehicle, true, true);')
+                .replace('method = "startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"', 'method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z"')
+                .replace('target = "Lnet/minecraft/world/entity/Entity;startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"', 'target = "Lnet/minecraft/world/entity/Entity;startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z"')
+                .replace('method = "stopRiding"', 'method = "removeVehicle"')
+                .replace('private void kinetic_assembly$saveAssemblyLoginPoint(CompoundTag tag, CallbackInfo ci)', 'private void kinetic_assembly$saveAssemblyLoginPoint(net.minecraft.world.level.storage.ValueOutput tag, CallbackInfo ci)')
+                .replace('private void kinetic_assembly$loadAssemblyLoginPoint(CompoundTag tag, CallbackInfo ci)', 'private void kinetic_assembly$loadAssemblyLoginPoint(net.minecraft.world.level.storage.ValueInput tag, CallbackInfo ci)')
+                .replace('                || !tag.contains(AssemblyTrackingPointSavedData.LOGIN_POINT_TAG)) {', '                || tag.read(AssemblyTrackingPointSavedData.LOGIN_POINT_TAG, net.minecraft.core.UUIDUtil.CODEC).isEmpty()) {')
+                .replace('        tag.remove("RootVehicle");', '        // ValueInput is immutable in 1.21.11; RootVehicle cleanup needs a separate port.')
+                .replace('import net.minecraft.sounds.SoundSource;\nimport net.minecraft.world.entity.player.Player;', 'import net.minecraft.sounds.SoundSource;\nimport net.minecraft.world.entity.Entity;\nimport net.minecraft.world.entity.player.Player;')
+                .replace('import net.minecraft.world.entity.player.Player;', 'import net.minecraft.world.entity.Entity;\nimport net.minecraft.world.entity.player.Player;')
+                .replace('private void kinetic_assembly$playPlotSeededSound(\n            Player player,', 'private void kinetic_assembly$playPlotSeededSound(\n            Entity player,')
+                .replace('private void kinetic_assembly$playPlotSound(\n            Player player,', 'private void kinetic_assembly$playPlotSound(\n            Entity player,')
+                .replace('private void kinetic_assembly$plotLevelEvent(Player player, int type, BlockPos pos, int data, CallbackInfo ci)',
+                        'private void kinetic_assembly$plotLevelEvent(Entity player, int type, BlockPos pos, int data, CallbackInfo ci)')
+                .replace('packet instanceof AssemblyEntityPacketAccess access', '((Object) packet) instanceof AssemblyEntityPacketAccess access')
+                .replace('kinetic_assembly$self().addParticle(particleData, forceAlwaysRender, world.x, world.y, world.z, worldSpeed.x, worldSpeed.y, worldSpeed.z)',
+                        'kinetic_assembly$self().addParticle(particleData, forceAlwaysRender, decreased, world.x, world.y, world.z, worldSpeed.x, worldSpeed.y, worldSpeed.z)')
+                .replace('kinetic_assembly$self().sendParticles(player, type, longDistance, world.x(), world.y(), world.z(), particleCount, xOffset, yOffset, zOffset, speed)',
+                        'kinetic_assembly$self().sendParticles(player, type, longDistance, force, world.x(), world.y(), world.z(), particleCount, xOffset, yOffset, zOffset, speed)')
+                .replace('original.call(instance, true, movement);',
+                        'original.call(instance, true, vanillaHorizontalCollision, movement);')
+                .replace('original.call(instance, onGround, movement);',
+                        'original.call(instance, onGround, vanillaHorizontalCollision, movement);')
+        if (replaced.contains('private void kinetic_assembly$playPlotSeededSound(')
+                || replaced.contains('private void kinetic_assembly$playPlotSound(')) {
+            versionedJavaSoundHandlerParamPending = true
+        }
+        if (replaced.contains('addParticle(Lnet/minecraft/core/particles/ParticleOptions;ZZDDDDDD)V')) {
+            versionedJavaClientParticleForceParamPending = true
+        }
+        if (replaced.contains('sendParticles(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/particles/ParticleOptions;ZZDDDIDDDD)Z')) {
+            versionedJavaServerParticleForceParamPending = true
+        }
+        if (replaced.contains('private void kinetic_assembly$preserveAssemblyGround(')) {
+            versionedJavaAssemblyGroundParamPending = true
+        }
+        if (replaced.contains('private void kinetic_assembly$plotLevelEvent(')) {
+            versionedJavaPlotLevelEventBroadcastPending = true
+        }
+        if (replaced.contains('method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z"')) {
+            versionedJavaStartRidingHandlerParamPending = true
+        }
+    }
+    replaced
+}
+
+tasks.register('generateVersionedJavaSources', Sync) {
+    inputs.property('targetMinecraftVersion', targetMinecraftVersion)
+    inputs.property('versionedJavaReplacements', versionedJavaReplacements.toString())
+    inputs.property('versionedJavaOverlayPaths', versionedJavaOverlayPaths.join(';'))
+    inputs.property('versionedJavaTransformVersion', 23)
+    versionedJavaOverlayDirs.findAll { it.exists() }.each { inputs.dir(it) }
+
+    from(kinetic_assemblyFile('src/common/java')) {
+        exclude { details -> versionedJavaOverlayPaths.contains(details.relativePath.pathString) }
+        if (!versionedJavaReplacements.isEmpty()) {
+            filter { String line -> transformVersionedJavaLine(line) }
+        }
+    }
+    from(kinetic_assemblyFile('src/neoforge/java')) {
+        exclude { details -> versionedJavaOverlayPaths.contains(details.relativePath.pathString) }
+        if (!versionedJavaReplacements.isEmpty()) {
+            filter { String line -> transformVersionedJavaLine(line) }
+        }
+    }
+    from(versionedCommonJavaDir) {
+        include '**/*.java'
+    }
+    from(versionedNeoForgeJavaDir) {
+        include '**/*.java'
+    }
+    into generatedVersionedJavaDir
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    includeEmptyDirs = false
+}
+
+sourceSets {
+    main {
+        java {
+            setSrcDirs([generatedVersionedJavaDir])
+        }
+        resources {
+            setSrcDirs([
+                    kinetic_assemblyFile('src/common/resources'),
+                    kinetic_assemblyFile('src/neoforge/resources'),
+                    kinetic_assemblyFile('src/generated/resources')
+            ])
+            if (bundleNativeLinux) {
+                srcDir(generatedNativeResourcesDir)
+            }
+
+            // Exclude common development only resources from finalized outputs
+            exclude("**/*.bbmodel") // BlockBench project files
+            exclude("src/generated/**/.cache") // datagen cache files
+        }
+    }
+    test {
+        java {
+            setSrcDirs([kinetic_assemblyFile('src/test/java')])
+        }
+        resources {
+            setSrcDirs([kinetic_assemblyFile('src/test/resources')])
+        }
+    }
+}
+
+repositories {
+    // Add here additional repositories if required by some of the dependencies below.
+}
+
+base {
+    archivesName = mod_id
+}
+
+// Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    // Specify the version of NeoForge to use.
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    accessTransformers = project.files(kinetic_assemblyFile('src/neoforge/resources/META-INF/accesstransformer.cfg'))
+
+    // Default run configurations.
+    // These can be tweaked, removed, or duplicated as needed.
+    runs {
+        client {
+            client()
+
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            data()
+
+            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+            // gameDirectory = project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', project.mod_id, '--all',
+                    '--output', kinetic_assemblyFile('src/generated/resources').getAbsolutePath(),
+                    '--existing', kinetic_assemblyFile('src/common/resources').getAbsolutePath()
+        }
+
+        // applies to all the run configs above
+        configureEach {
+            // Recommended logging data for a userdev environment
+            // The markers can be added/remove as needed separated by commas.
+            // "SCAN": For mods scan.
+            // "REGISTRIES": For firing of registry events.
+            // "REGISTRYDUMP": For getting the contents of all registries.
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            // Recommended logging level for the console
+            // You can set various levels here.
+            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            logLevel = org.slf4j.event.Level.DEBUG
+            systemProperty 'kinetic_assembly.nativeLibraryPath', kinetic_assemblyFile('build/native/linux-x86_64').getAbsolutePath()
+        }
+    }
+
+    mods {
+        // define mod <-> source bindings
+        // these are used to tell the game which sources are for which mod
+        // multi mod projects should define one per mod
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+// Sets up a dependency configuration called 'localRuntime'.
+// This configuration should be used instead of 'runtimeOnly' to declare
+// a dependency that will be present for runtime testing but that is
+// "optional", meaning it will not be pulled by dependents of this mod.
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    // Example optional mod dependency with JEI
+    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
+    // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
+    // compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${jei_version}"
+    // We add the full version to localRuntime, not runtimeOnly, so that we do not publish a dependency on it
+    // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
+
+    // Example mod dependency using a mod jar from ./libs with a flat dir repository
+    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
+    // The group id is ignored when searching -- in this case, it is "blank"
+    // implementation "blank:coolmod-${mc_version}:${coolmod_version}"
+
+    // Example mod dependency using a file as dependency
+    // implementation files("libs/coolmod-${mc_version}-${coolmod_version}.jar")
+
+    // Example project dependency using a sister or child project:
+    // implementation project(":myproject")
+
+    // For more info:
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+}
+
+// This block of code expands all declared replace properties in the specified resource targets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from kinetic_assemblyFile('src/neoforge/templates')
+    into "build/generated/sources/modMetadata"
+}
+// Include the output of "generateModMetadata" as an input directory for the build
+// this works with both building through Gradle and the IDE.
+sourceSets.main.resources.srcDir generateModMetadata
+// To avoid having to run "generateModMetadata" manually, make it run on every project reload
+neoForge.ideSyncTask generateModMetadata
+
+// Example configuration to allow publishing using the maven-publish plugin
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${kinetic_assemblyFile('repo')}"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('generateVersionedJavaSources')
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register('buildNativeLinux', Exec) {
+    group = 'build'
+    description = 'Builds the Linux PhysX JNI bridge into build/native/linux-x86_64.'
+    workingDir kinetic_assemblyRootDir
+    commandLine 'sh', kinetic_assemblyFile('tools/native/build-linux.sh').absolutePath
+    inputs.file kinetic_assemblyFile('tools/native/build-linux.sh')
+    inputs.dir kinetic_assemblyFile('src/main/cpp/kinetic_assembly')
+    outputs.file nativeLinuxLibrary
+}
+
+tasks.register('copyNativeLinux', Copy) {
+    group = 'build'
+    description = 'Copies the Linux native bridge into generated jar resources.'
+    dependsOn tasks.named('buildNativeLinux')
+    from kinetic_assemblyFile('build/native/linux-x86_64')
+    into layout.buildDirectory.dir('generated/nativeResources/native/linux-x86_64')
+    include 'libkinetic_assembly_native.so'
+    include 'libPhysXGpu_64.so'
+    includeEmptyDirs = false
+}
+
+if (bundleNativeLinux) {
+    tasks.named('processResources') {
+        dependsOn tasks.named('copyNativeLinux')
+    }
+}
+
+tasks.register('nativeSmokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs a minimal PhysX JNI smoke test against build/native/linux-x86_64.'
+    dependsOn tasks.named('testClasses')
+    dependsOn tasks.named('buildNativeLinux')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.firedoge.kineticassembly.debug.NativePhysicsSmokeTest'
+    systemProperty 'java.library.path', kinetic_assemblyFile('build/native/linux-x86_64').absolutePath
+}
+
+tasks.matching { it.name in ['runClient', 'runServer', 'runGameTestServer'] }.configureEach {
+    dependsOn tasks.named('buildNativeLinux')
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

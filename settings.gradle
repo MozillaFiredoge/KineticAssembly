@@ -1,0 +1,27 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            url = "https://maven.kikugie.dev/snapshots"
+            name = "KikuGie Snapshots"
+        }
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+    id 'dev.kikugie.stonecutter' version '0.9.5'
+}
+
+rootProject.name = 'kinetic_assembly'
+
+stonecutter {
+    // Enable Groovy DSL, as Stonecutter uses Kotlin by default
+    kotlinController = false
+    centralScript = "build.gradle"
+
+    create(rootProject) {
+        mapBuilds { branch, node -> "versions/${node.project}/build.gradle".toString() }
+        versions("1.21.1", "1.21.11")
+    }
+}

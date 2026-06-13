@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "mass_scale": 0.05,
+  "default_density": 1000.0,
+  "blocks": {
+    "minecraft:air": 1.0,
+    "minecraft:stone": 2400.0,
+    "minecraft:cobblestone": 2400.0,
+    "minecraft:deepslate": 2800.0,
+    "minecraft:dirt": 1500.0,
+    "minecraft:grass_block": 1500.0,
+    "minecraft:sand": 1600.0,
+    "minecraft:gravel": 1700.0,
+    "minecraft:ice": 920.0,
+    "minecraft:packed_ice": 920.0,
+    "minecraft:blue_ice": 920.0,
+    "minecraft:iron_block": 7800.0,
+    "minecraft:gold_block": 19300.0,
+    "minecraft:copper_block": 8900.0,
+    "minecraft:oak_planks": 650.0,
+    "minecraft:glass": 2500.0,
+    "minecraft:slime_block": 1200.0,
+    "minecraft:honey_block": 1400.0
+  },
+  "tags": {
+    "minecraft:logs": 700.0,
+    "minecraft:planks": 650.0,
+    "minecraft:wool": 80.0,
+    "minecraft:leaves": 120.0,
+    "minecraft:stone_bricks": 2400.0
+  }
+}

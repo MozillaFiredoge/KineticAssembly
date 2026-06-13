@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'idea'
+}
+
+ext.kinetic_assemblyRootDir = file('../..').canonicalFile
+
+def loadProperties = { File propertiesFile ->
+    if (!propertiesFile.isFile()) {
+        return
+    }
+    def values = new Properties()
+    propertiesFile.withInputStream(values.&load)
+    values.each { key, value ->
+        ext.set(key.toString(), value.toString())
+    }
+}
+
+loadProperties(new File(kinetic_assemblyRootDir, 'gradle.properties'))
+loadProperties(file('gradle.properties'))
+
+apply from: new File(kinetic_assemblyRootDir, 'build.gradle')
