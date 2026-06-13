@@ -1,0 +1,60 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.firedoge.kineticassembly",
+    "module": "kinetic_assembly-neoforge-1.21.1",
+    "version": "0.1.0-alpha.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.2.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "kinetic_assembly-neoforge-1.21.1-0.1.0-alpha.1.jar",
+          "url": "kinetic_assembly-neoforge-1.21.1-0.1.0-alpha.1.jar",
+          "size": 991978,
+          "sha512": "6812e2337c459575c8d7679ed8a12cec11da1e7e4e09636254bde0bb0b63685cf6d6bf512ace0c9036c5f90f3c684acad58aa72491cd876396b07faf6d23b2fb",
+          "sha256": "57331601ccde0cc0bcb3a937378f87dda7185a035990b3afa465b34a2a4012c4",
+          "sha1": "7f3cf12dd5225e1fbdc3d029518b3b20ecf5a587",
+          "md5": "57eacbcf6fbb1c865a2abbdfdd7d773a"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "kinetic_assembly-neoforge-1.21.1-0.1.0-alpha.1.jar",
+          "url": "kinetic_assembly-neoforge-1.21.1-0.1.0-alpha.1.jar",
+          "size": 991978,
+          "sha512": "6812e2337c459575c8d7679ed8a12cec11da1e7e4e09636254bde0bb0b63685cf6d6bf512ace0c9036c5f90f3c684acad58aa72491cd876396b07faf6d23b2fb",
+          "sha256": "57331601ccde0cc0bcb3a937378f87dda7185a035990b3afa465b34a2a4012c4",
+          "sha1": "7f3cf12dd5225e1fbdc3d029518b3b20ecf5a587",
+          "md5": "57eacbcf6fbb1c865a2abbdfdd7d773a"
+        }
+      ]
+    }
+  ]
+}
