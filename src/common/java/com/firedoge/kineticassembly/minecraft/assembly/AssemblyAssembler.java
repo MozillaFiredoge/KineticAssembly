@@ -13,6 +13,7 @@ import com.firedoge.kineticassembly.api.PhysicsQuaternion;
 import com.firedoge.kineticassembly.api.PhysicsVector;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodySnapshot;
 import com.firedoge.kineticassembly.mechanics.MechanicsCompoundBoxDefinition;
+import com.firedoge.kineticassembly.mechanics.MechanicsOwner;
 import com.firedoge.kineticassembly.mechanics.MechanicsWorld;
 import com.firedoge.kineticassembly.minecraft.scene.ServerPhysicsRuntime;
 
@@ -51,11 +52,13 @@ final class AssemblyAssembler {
             BlockPos first,
             BlockPos second,
             Float massOverride,
+            MechanicsOwner owner,
             ServerAssemblyContainer container
     ) {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(first, "first");
         Objects.requireNonNull(second, "second");
+        Objects.requireNonNull(owner, "owner");
         Objects.requireNonNull(container, "container");
         if (container.level() != level) {
             throw new IllegalArgumentException("Assembly container must belong to the assembling level");
@@ -89,7 +92,7 @@ final class AssemblyAssembler {
             }
             refreshTerrainAround(level, removedBlocks);
 
-            body = world.createDynamicCompoundBox(compoundDefinition(
+            body = world.createDynamicCompoundBox(owner, compoundDefinition(
                     new PhysicsPose(aggregate.center(), PhysicsQuaternion.IDENTITY),
                     assemblyBlocks,
                     massProperties
@@ -98,6 +101,7 @@ final class AssemblyAssembler {
             PhysicsAssembly assembly = new PhysicsAssembly(
                     AssemblyId.random(),
                     level.dimension(),
+                    owner,
                     plot,
                     body.id(),
                     bounds,

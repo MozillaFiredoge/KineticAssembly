@@ -19,6 +19,7 @@ import com.firedoge.kineticassembly.api.PhysicsQuaternion;
 import com.firedoge.kineticassembly.api.PhysicsVector;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodyId;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodySnapshot;
+import com.firedoge.kineticassembly.mechanics.MechanicsOwner;
 import com.firedoge.kineticassembly.mechanics.MechanicsWorld;
 import com.firedoge.kineticassembly.minecraft.scene.ServerPhysicsRuntime;
 import com.firedoge.kineticassembly.platform.PlatformServices;
@@ -486,7 +487,7 @@ public final class AssemblyPersistence {
     private static boolean restoreAssembly(ServerLevel level, ServerAssemblyContainer container, StoredAssembly stored) {
         buildRestoreTerrainCollision(level, stored);
         MechanicsWorld world = KineticAssembly.api().world(level);
-        MechanicsBodySnapshot body = world.createDynamicCompoundBox(stored.bodyId(), AssemblyAssembler.compoundDefinition(
+        MechanicsBodySnapshot body = world.createDynamicCompoundBox(stored.owner(), stored.bodyId(), AssemblyAssembler.compoundDefinition(
                 stored.pose(),
                 stored.blocks(),
                 stored.mass()
@@ -497,6 +498,7 @@ public final class AssemblyPersistence {
         PhysicsAssembly assembly = new PhysicsAssembly(
                 stored.id(),
                 level.dimension(),
+                stored.owner(),
                 stored.plot(),
                 body.id(),
                 stored.bounds(),
@@ -765,6 +767,7 @@ public final class AssemblyPersistence {
         CompoundTag tag = new CompoundTag();
         tag.store("id", net.minecraft.core.UUIDUtil.CODEC, assembly.id().value());
         tag.store("body_id", net.minecraft.core.UUIDUtil.CODEC, body.id().value());
+        tag.putString("owner", assembly.owner().id().toString());
         tag.put("bounds", writeBounds(assembly.bounds()));
         tag.put("plot", writePlot(assembly.plot()));
         tag.put("pose", writePose(body.pose()));
@@ -827,6 +830,7 @@ public final class AssemblyPersistence {
     private static StoredAssembly readAssembly(ServerLevel level, CompoundTag tag) {
         AssemblyId id = new AssemblyId(tag.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow());
         MechanicsBodyId bodyId = new MechanicsBodyId(tag.read("body_id", net.minecraft.core.UUIDUtil.CODEC).isPresent() ? tag.read("body_id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow() : UUID.randomUUID());
+        MechanicsOwner owner = readOwner(tag);
         AssemblyBounds bounds = readBounds(tag.getCompoundOrEmpty("bounds"));
         AssemblyPlot plot = readPlot(tag.getCompoundOrEmpty("plot"));
         PhysicsPose pose = readPose(tag.getCompoundOrEmpty("pose"));
@@ -857,6 +861,7 @@ public final class AssemblyPersistence {
         return new StoredAssembly(
                 id,
                 bodyId,
+                owner,
                 bounds,
                 plot,
                 pose,
@@ -868,6 +873,14 @@ public final class AssemblyPersistence {
                 dependencies,
                 scheduledTicks
         );
+    }
+
+    private static MechanicsOwner readOwner(CompoundTag tag) {
+        if (!tag.contains("owner")) {
+            return MechanicsOwner.KINETIC_ASSEMBLY;
+        }
+        Identifier id = Identifier.tryParse(tag.getStringOr("owner", ""));
+        return id == null ? MechanicsOwner.KINETIC_ASSEMBLY : new MechanicsOwner(id);
     }
 
     private static AssemblyBlock readBlock(CompoundTag tag, HolderLookup.RegistryLookup<Block> blockLookup) {
@@ -1263,6 +1276,7 @@ public final class AssemblyPersistence {
     private record StoredAssembly(
             AssemblyId id,
             MechanicsBodyId bodyId,
+            MechanicsOwner owner,
             AssemblyBounds bounds,
             AssemblyPlot plot,
             PhysicsPose pose,
@@ -1277,6 +1291,7 @@ public final class AssemblyPersistence {
         private StoredAssembly {
             Objects.requireNonNull(id, "id");
             Objects.requireNonNull(bodyId, "bodyId");
+            Objects.requireNonNull(owner, "owner");
             Objects.requireNonNull(bounds, "bounds");
             Objects.requireNonNull(plot, "plot");
             Objects.requireNonNull(pose, "pose");

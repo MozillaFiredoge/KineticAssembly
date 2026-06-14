@@ -17,6 +17,12 @@ import com.firedoge.kineticassembly.api.PhysicsPose;
 import com.firedoge.kineticassembly.api.PhysicsVector;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodyId;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodySnapshot;
+import com.firedoge.kineticassembly.mechanics.MechanicsAssemblyId;
+import com.firedoge.kineticassembly.mechanics.MechanicsAssemblyOptions;
+import com.firedoge.kineticassembly.mechanics.MechanicsAssemblySnapshot;
+import com.firedoge.kineticassembly.mechanics.MechanicsOwner;
+import com.firedoge.kineticassembly.mechanics.MechanicsResult;
+import com.firedoge.kineticassembly.mechanics.MechanicsResultCode;
 import com.firedoge.kineticassembly.mechanics.MechanicsWorld;
 import com.firedoge.kineticassembly.minecraft.scene.ServerPhysicsRuntime;
 
@@ -72,35 +78,80 @@ public final class AssemblyManager {
         return assembleBox(level, pos, pos, mass, debugProxy);
     }
 
+    public MechanicsResult<MechanicsAssemblySnapshot> assembleBlock(
+            ServerLevel level,
+            BlockPos pos,
+            MechanicsAssemblyOptions options
+    ) {
+        return assembleBox(level, pos, pos, options);
+    }
+
     public AssemblySnapshot assembleBox(ServerLevel level, BlockPos first, BlockPos second, boolean debugProxy) {
-        return assembleBox(level, first, second, null, debugProxy);
+        return assembleBox(level, first, second, null, MechanicsOwner.KINETIC_ASSEMBLY, debugProxy);
     }
 
     public AssemblySnapshot assembleBox(ServerLevel level, BlockPos first, BlockPos second, float mass, boolean debugProxy) {
-        return assembleBox(level, first, second, Float.valueOf(mass), debugProxy);
+        return assembleBox(level, first, second, Float.valueOf(mass), MechanicsOwner.KINETIC_ASSEMBLY, debugProxy);
     }
 
-    private AssemblySnapshot assembleBox(ServerLevel level, BlockPos first, BlockPos second, Float massOverride, boolean debugProxy) {
+    public MechanicsResult<MechanicsAssemblySnapshot> assembleBox(
+            ServerLevel level,
+            BlockPos first,
+            BlockPos second,
+            MechanicsAssemblyOptions options
+    ) {
+        Objects.requireNonNull(options, "options");
+        try {
+            AssemblySnapshot snapshot = assembleBox(
+                    level,
+                    first,
+                    second,
+                    options.massOverride().orElse(null),
+                    options.owner(),
+                    options.debugProxy()
+            );
+            return MechanicsResult.ok(mechanicsSnapshot(snapshot));
+        } catch (IllegalArgumentException exception) {
+            return MechanicsResult.failure(MechanicsResultCode.INVALID_ARGUMENT, exception.getMessage());
+        } catch (IllegalStateException exception) {
+            return MechanicsResult.failure(assemblyFailureCode(exception), exception.getMessage());
+        } catch (UnsupportedOperationException exception) {
+            return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, exception.getMessage());
+        } catch (RuntimeException exception) {
+            return MechanicsResult.failure(MechanicsResultCode.FAILED, exception.getMessage());
+        }
+    }
+
+    private AssemblySnapshot assembleBox(
+            ServerLevel level,
+            BlockPos first,
+            BlockPos second,
+            Float massOverride,
+            MechanicsOwner owner,
+            boolean debugProxy
+    ) {
+        Objects.requireNonNull(owner, "owner");
         ServerAssemblyContainer container = AssemblyContainers.requireServer(level);
         List<AssemblyEntityBridge.AttachedEntityCapture> attachedEntities =
                 AssemblyEntityBridge.captureAttachedEntitiesForAssembly(level, AssemblyBounds.from(first, second));
-        AssemblyAssembler.Result result = AssemblyAssembler.assembleBox(level, first, second, massOverride, container);
+        AssemblyAssembler.Result result = AssemblyAssembler.assembleBox(level, first, second, massOverride, owner, container);
         PhysicsAssembly assembly = result.assembly();
-        container.add(assembly);
-        AssemblyEntityBridge.registerCapturedAttachedEntities(level, assembly, attachedEntities);
-        container.moveSourceScheduledTicksToPlot(assembly);
-        container.requestPlotBlockUpdatePrime(assembly);
-        assembly.activate();
+        boolean added = false;
+        boolean sourceTicksMoved = false;
         try {
+            container.add(assembly);
+            added = true;
+            AssemblyEntityBridge.registerCapturedAttachedEntities(level, assembly, attachedEntities);
+            container.moveSourceScheduledTicksToPlot(assembly);
+            sourceTicksMoved = true;
+            container.requestPlotBlockUpdatePrime(assembly);
+            assembly.activate();
             if (debugProxy) {
                 createVisuals(level, result.body(), assembly);
             }
             return snapshot(result.body(), assembly);
         } catch (RuntimeException exception) {
-            discardVisuals(level, result.body(), assembly);
-            prepareAssemblyRemoval(level, assembly);
-            container.remove(assembly.id());
-            KineticAssembly.api().existingWorld(level).ifPresent(world -> world.removeBody(assembly.bodyId()));
+            rollbackFailedAssemblyCapture(level, container, result.body(), assembly, added, sourceTicksMoved, exception);
             throw exception;
         }
     }
@@ -1271,6 +1322,60 @@ public final class AssemblyManager {
         assembly.clearBlockEntities();
     }
 
+    private void rollbackFailedAssemblyCapture(
+            ServerLevel level,
+            ServerAssemblyContainer container,
+            MechanicsBodySnapshot body,
+            PhysicsAssembly assembly,
+            boolean added,
+            boolean sourceTicksMoved,
+            RuntimeException cause
+    ) {
+        suppressRollbackFailure(cause, () -> discardVisuals(level, body, assembly));
+        if (sourceTicksMoved) {
+            suppressRollbackFailure(cause, () -> container.movePlotScheduledTicksToSource(assembly));
+        }
+        suppressRollbackFailure(cause, () -> AssemblyEntityBridge.restoreAttachedEntitiesToSource(level, assembly));
+        if (added) {
+            suppressRollbackFailure(cause, () -> container.remove(assembly.id()));
+        }
+        suppressRollbackFailure(cause, () -> KineticAssembly.api()
+                .existingWorld(level)
+                .ifPresent(world -> world.removeBody(assembly.bodyId())));
+        suppressRollbackFailure(cause, () -> restoreCapturedBlocksToSource(level, assembly.blocks()));
+    }
+
+    private static void restoreCapturedBlocksToSource(ServerLevel level, List<AssemblyBlock> blocks) {
+        for (AssemblyBlock block : blocks) {
+            BlockState currentState = level.getBlockState(block.sourcePos());
+            if (!currentState.isAir() && !currentState.equals(block.blockState())) {
+                KineticAssembly.LOGGER.warn(
+                        "Skipping rollback restore at {} because the source position is occupied by {}",
+                        describePos(block.sourcePos()),
+                        currentState
+                );
+                continue;
+            }
+            if (!level.setBlock(block.sourcePos(), block.blockState(), BLOCK_UPDATE_FLAGS)) {
+                KineticAssembly.LOGGER.warn("Failed to rollback restore block at {}", describePos(block.sourcePos()));
+                continue;
+            }
+            CompoundTag blockEntityTag = block.blockEntityTag();
+            if (blockEntityTag != null) {
+                restoreSourceBlockEntity(level, block, blockEntityTag);
+            }
+        }
+        AssemblyAssembler.refreshTerrainAround(level, blocks);
+    }
+
+    private static void suppressRollbackFailure(RuntimeException cause, Runnable rollback) {
+        try {
+            rollback.run();
+        } catch (RuntimeException rollbackException) {
+            cause.addSuppressed(rollbackException);
+        }
+    }
+
     private static AssemblyPlotProjection trackingProjection(PhysicsAssembly assembly, MechanicsBodySnapshot body) {
         return new AssemblyPlotProjection(
                 assembly.id(),
@@ -1371,7 +1476,7 @@ public final class AssemblyManager {
         MechanicsBodySnapshot replacement = null;
         boolean blocksReplaced = false;
         try {
-            replacement = world.createDynamicCompoundBox(AssemblyAssembler.compoundDefinition(
+            replacement = world.createDynamicCompoundBox(assembly.owner(), AssemblyAssembler.compoundDefinition(
                     replacementPose,
                     replacementBlocks
             ));
@@ -1501,7 +1606,7 @@ public final class AssemblyManager {
             for (List<AssemblyBlock> component : components) {
                 SplitComponent splitComponent = splitComponent(level, assembly, previousBody, component);
                 float componentMass = splitMass(previousBody.mass(), component.size(), totalBlocks);
-                MechanicsBodySnapshot body = world.createDynamicCompoundBox(AssemblyAssembler.compoundDefinition(
+                MechanicsBodySnapshot body = world.createDynamicCompoundBox(assembly.owner(), AssemblyAssembler.compoundDefinition(
                         splitComponent.pose(),
                         splitComponent.blocks(),
                         componentMass
@@ -1510,6 +1615,7 @@ public final class AssemblyManager {
                 PhysicsAssembly child = new PhysicsAssembly(
                         AssemblyId.random(),
                         level.dimension(),
+                        assembly.owner(),
                         container.allocatePlot(splitComponent.bounds()),
                         body.id(),
                         splitComponent.bounds(),
@@ -1881,6 +1987,32 @@ public final class AssemblyManager {
                 assembly.visuals().size(),
                 assembly.section().dirtyBlockCount()
         );
+    }
+
+    private static MechanicsAssemblySnapshot mechanicsSnapshot(AssemblySnapshot snapshot) {
+        return new MechanicsAssemblySnapshot(
+                new MechanicsAssemblyId(snapshot.id().value()),
+                snapshot.levelKey(),
+                snapshot.body().owner(),
+                snapshot.body(),
+                snapshot.bounds().minSourcePos(),
+                snapshot.bounds().maxSourcePos(),
+                snapshot.blockCount(),
+                snapshot.visualCount(),
+                snapshot.dirtyBlockCount(),
+                snapshot.visualCount() > 0
+        );
+    }
+
+    private static MechanicsResultCode assemblyFailureCode(IllegalStateException exception) {
+        String message = exception.getMessage();
+        if (message != null) {
+            String lower = message.toLowerCase(java.util.Locale.ROOT);
+            if (lower.contains("native") || lower.contains("backend") || lower.contains("physx")) {
+                return MechanicsResultCode.NATIVE_UNAVAILABLE;
+            }
+        }
+        return MechanicsResultCode.FAILED;
     }
 
     private static Optional<Double> intersectBlock(PhysicsVector origin, PhysicsVector direction, AssemblyBlock block, double maxDistance) {

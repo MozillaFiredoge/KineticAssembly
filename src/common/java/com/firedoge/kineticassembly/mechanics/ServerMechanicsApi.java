@@ -6,8 +6,10 @@ import java.util.Optional;
 
 import com.firedoge.kineticassembly.api.PhysicsPose;
 import com.firedoge.kineticassembly.api.PhysicsVector;
+import com.firedoge.kineticassembly.minecraft.assembly.AssemblyManager;
 import com.firedoge.kineticassembly.minecraft.scene.ServerPhysicsRuntime;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -94,6 +96,20 @@ public final class ServerMechanicsApi implements MechanicsApi {
                 MechanicsCompoundBoxDefinition definition
         ) {
             return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicCompoundBox(level, owner, id, definition);
+        }
+
+        @Override
+        public MechanicsResult<MechanicsAssemblySnapshot> assembleBlock(BlockPos pos, MechanicsAssemblyOptions options) {
+            return AssemblyManager.INSTANCE.assembleBlock(level, pos, options);
+        }
+
+        @Override
+        public MechanicsResult<MechanicsAssemblySnapshot> assembleBox(
+                BlockPos first,
+                BlockPos second,
+                MechanicsAssemblyOptions options
+        ) {
+            return AssemblyManager.INSTANCE.assembleBox(level, first, second, options);
         }
 
         @Override

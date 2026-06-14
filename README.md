@@ -30,17 +30,16 @@ dependencies {
 ```java
 MechanicsWorld world = KineticAssembly.api().world(serverLevel);
 
-MechanicsBodySnapshot body = world.createDynamicBox(
-    MechanicsOwner.of("my_mod", "demo"),
-    MechanicsBoxDefinition.gameplayDynamicBox(
-        new PhysicsPose(position, PhysicsQuaternion.IDENTITY),
-        new PhysicsVector(0.5, 0.5, 0.5),
-        20.0F
-    )
+MechanicsResult<MechanicsAssemblySnapshot> result = world.assembleBox(
+    firstBlock,
+    secondBlock,
+    MechanicsAssemblyOptions.owned(MechanicsOwner.of("my_mod", "airframe"))
 );
 
-world.applyLinearImpulse(body.id(), new PhysicsVector(0, 6, 0));
-world.applyForce(body.id(), new PhysicsVector(0, 25, 0));
+if (result.success()) {
+    MechanicsBodySnapshot body = result.value().orElseThrow().body();
+    world.applyForce(body.id(), new PhysicsVector(0, 25, 0));
+}
 ```
 
 > Full API reference: [docs/mechanics-api.md](docs/mechanics-api.md) ·  

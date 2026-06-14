@@ -7,6 +7,7 @@ import com.firedoge.kineticassembly.api.PhysicsPose;
 import com.firedoge.kineticassembly.api.PhysicsQuaternion;
 import com.firedoge.kineticassembly.api.PhysicsVector;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
@@ -43,6 +44,26 @@ public interface MechanicsWorld {
             MechanicsCompoundBoxDefinition definition
     ) {
         return createDynamicCompoundBox(id, definition);
+    }
+
+    default MechanicsResult<MechanicsAssemblySnapshot> assembleBlock(BlockPos pos) {
+        return assembleBlock(pos, MechanicsAssemblyOptions.DEFAULT);
+    }
+
+    default MechanicsResult<MechanicsAssemblySnapshot> assembleBlock(BlockPos pos, MechanicsAssemblyOptions options) {
+        return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, "Block assembly is not supported by this mechanics world");
+    }
+
+    default MechanicsResult<MechanicsAssemblySnapshot> assembleBox(BlockPos first, BlockPos second) {
+        return assembleBox(first, second, MechanicsAssemblyOptions.DEFAULT);
+    }
+
+    default MechanicsResult<MechanicsAssemblySnapshot> assembleBox(
+            BlockPos first,
+            BlockPos second,
+            MechanicsAssemblyOptions options
+    ) {
+        return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, "Block assembly is not supported by this mechanics world");
     }
 
     default MechanicsJointSnapshot createFixedJoint(MechanicsBodyId firstBodyId, MechanicsBodyId secondBodyId) {

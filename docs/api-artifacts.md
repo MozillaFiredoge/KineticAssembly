@@ -51,8 +51,9 @@ that stub is not a runtime implementation. Players and development runs still
 need the full NeoForge runtime mod.
 
 The public mechanics package now includes capability discovery, owner-tagged
-body creation, structured `MechanicsResult` failures, continuous force/torque
-entry points, and physics tick phase listeners.
+body creation, block-volume assembly creation, structured `MechanicsResult`
+failures, continuous force/torque entry points, and physics tick phase
+listeners.
 
 ## Consumer Example
 
@@ -98,7 +99,6 @@ Minecraft and NeoForge types such as `ServerLevel` and `ResourceKey<Level>`.
 
 The API artifact still does not include:
 
-- assembly creation from block volumes as a public API;
 - raycast, overlap, or contact query APIs;
 - Fabric runtime support.
 

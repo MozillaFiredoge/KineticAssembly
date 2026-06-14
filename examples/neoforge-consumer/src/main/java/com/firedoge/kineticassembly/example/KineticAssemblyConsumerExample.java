@@ -5,6 +5,8 @@ import com.firedoge.kineticassembly.api.PhysicsPose;
 import com.firedoge.kineticassembly.api.PhysicsQuaternion;
 import com.firedoge.kineticassembly.api.PhysicsVector;
 import com.firedoge.kineticassembly.mechanics.MechanicsApi;
+import com.firedoge.kineticassembly.mechanics.MechanicsAssemblyOptions;
+import com.firedoge.kineticassembly.mechanics.MechanicsAssemblySnapshot;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodyId;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodySnapshot;
 import com.firedoge.kineticassembly.mechanics.MechanicsBoxDefinition;
@@ -14,6 +16,7 @@ import com.firedoge.kineticassembly.mechanics.MechanicsResult;
 import com.firedoge.kineticassembly.mechanics.MechanicsTickPhase;
 import com.firedoge.kineticassembly.mechanics.MechanicsWorld;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.common.Mod;
@@ -52,6 +55,22 @@ public final class KineticAssemblyConsumerExample {
             }
         }
         return body.id();
+    }
+
+    public static MechanicsAssemblySnapshot assembleDemoBlocks(ServerLevel level, BlockPos first, BlockPos second) {
+        MechanicsApi mechanics = KineticAssembly.api();
+        if (!mechanics.capabilities().blockAssemblies()) {
+            throw new IllegalStateException("KineticAssembly block assemblies are not available");
+        }
+        MechanicsResult<MechanicsAssemblySnapshot> result = mechanics.world(level).assembleBox(
+                first,
+                second,
+                MechanicsAssemblyOptions.owned(OWNER)
+        );
+        if (!result.success()) {
+            throw new IllegalStateException("KineticAssembly block assembly failed: " + result.code());
+        }
+        return result.value().orElseThrow();
     }
 
     public static AutoCloseable onPhysicsStep(MechanicsApi mechanics) {

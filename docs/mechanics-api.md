@@ -23,7 +23,7 @@ The compile-time API artifact is described in `docs/api-artifacts.md`.
 ## Current Surface
 
 The current API slice supports server-side rigid dynamic boxes, compound boxes,
-joints, impulses, forces, snapshots, and tick callbacks:
+block-volume assemblies, joints, impulses, forces, snapshots, and tick callbacks:
 
 ```java
 MechanicsBodySnapshot body = world.createDynamicBox(
@@ -41,12 +41,31 @@ MechanicsResult<Void> force = world.applyForce(body.id(), new PhysicsVector(0.0D
 Optional<MechanicsBodySnapshot> latest = world.snapshot(body.id());
 ```
 
+Dependent mods can also detach existing Minecraft blocks into a mechanics-owned
+assembly:
+
+```java
+MechanicsResult<MechanicsAssemblySnapshot> result = world.assembleBox(
+        firstBlock,
+        secondBlock,
+        MechanicsAssemblyOptions.owned(MechanicsOwner.of("example_mod", "airframe"))
+                .withDebugProxy(false)
+);
+if (!result.success()) {
+    throw new IllegalStateException("Assembly failed: " + result.code() + " " + result.message());
+}
+
+MechanicsAssemblySnapshot assembly = result.value().orElseThrow();
+MechanicsBodySnapshot body = assembly.body();
+```
+
 Available operations:
 
 - query runtime mechanics capabilities;
 - create a gameplay dynamic box;
 - create a gameplay dynamic box with a caller-supplied stable body id;
 - create boxes with an explicit `MechanicsOwner`;
+- assemble one block or an axis-aligned block box into a mechanics assembly;
 - create a fixed joint between two mechanics bodies;
 - create a distance joint between two mechanics bodies;
 - list mechanics-owned body snapshots in one `ServerLevel`;
@@ -64,14 +83,14 @@ Available operations:
 
 `MechanicsApi.capabilities()` reports which parts of the mechanics API are
 available in the current runtime. The current capability model is coarse:
-dynamic boxes, compound boxes, joints, impulses, and forces are available when
-the configured native backend is available; tick events are available as part
-of the Java runtime.
+dynamic boxes, compound boxes, block assemblies, joints, impulses, and forces
+are available when the configured native backend is available; tick events are
+available as part of the Java runtime.
 
 Newer APIs return `MechanicsResult<T>` instead of a bare boolean. Callers should
 check `result.success()` and branch on `result.code()` for cases such as
 `NOT_FOUND`, `WRONG_LEVEL`, `STATIC_BODY`, `INVALID_ARGUMENT`, and
-`NATIVE_UNAVAILABLE`.
+`NATIVE_UNAVAILABLE`, and `FAILED`.
 
 ## Tick Events
 
@@ -125,6 +144,11 @@ stress bodies. They do not automatically create `BlockDisplay` render proxies.
 Rendering, gameplay conversion, and lifecycle policy should be layered on top of
 this API.
 
+Assemblies created through `assembleBlock` or `assembleBox` keep the supplied
+`MechanicsOwner` on their body snapshots. Built-in assembly persistence stores
+that owner and restores it after save/load. If a saved assembly predates owner
+storage, it is restored as `MechanicsOwner.KINETIC_ASSEMBLY`.
+
 Callers that need joints to survive a save/load cycle should persist their
 logical body ids and recreate mechanics bodies with the stable-id overloads:
 
@@ -161,6 +185,9 @@ adapter backed by the same round-robin sync path as other debug proxies.
 M20 extends the adapter internally so gameplay prototypes can render a mechanics
 body with a specific block state. Detached blocks use this path to show the
 original Minecraft block instead of the generic debug material.
+
+`MechanicsAssemblyOptions.withDebugProxy(true)` enables the same adapter for an
+assembled block volume. This is a debugging aid, not a public rendering model.
 
 ## Block Density
 
@@ -244,7 +271,9 @@ through this mechanics layer instead of through native handles:
 
 ## Current Limits
 
-- The API still does not expose assembly creation from arbitrary block volumes.
+- Assembly creation currently accepts one block or an axis-aligned block box.
+  The API does not yet expose block filters, custom capture policies, arbitrary
+  shapes, stable assembly ids, disassembly, or public block inventory editing.
 - `applyLinearImpulse` and `applyAngularImpulse` are native PhysX impulse calls
   for the PhysX backend. `applyForce`, `applyTorque`, and `applyForceAtPoint`
   use PhysX force mode. These APIs require dynamic bodies and fail for static

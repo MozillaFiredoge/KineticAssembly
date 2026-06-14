@@ -11,6 +11,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.firedoge.kineticassembly.mechanics.MechanicsBodyId;
+import com.firedoge.kineticassembly.mechanics.MechanicsOwner;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -21,6 +22,7 @@ import net.minecraft.world.phys.AABB;
 public final class PhysicsAssembly {
     private final AssemblyId id;
     private final ResourceKey<Level> levelKey;
+    private final MechanicsOwner owner;
     private final AssemblyPlot plot;
     private MechanicsBodyId bodyId;
     private AssemblyBounds bounds;
@@ -42,6 +44,7 @@ public final class PhysicsAssembly {
     public PhysicsAssembly(
             AssemblyId id,
             ResourceKey<Level> levelKey,
+            MechanicsOwner owner,
             AssemblyPlot plot,
             MechanicsBodyId bodyId,
             AssemblyBounds bounds,
@@ -49,6 +52,7 @@ public final class PhysicsAssembly {
     ) {
         this.id = Objects.requireNonNull(id, "id");
         this.levelKey = Objects.requireNonNull(levelKey, "levelKey");
+        this.owner = Objects.requireNonNull(owner, "owner");
         this.plot = Objects.requireNonNull(plot, "plot");
         this.bodyId = Objects.requireNonNull(bodyId, "bodyId");
         this.bounds = Objects.requireNonNull(bounds, "bounds");
@@ -64,6 +68,10 @@ public final class PhysicsAssembly {
 
     public ResourceKey<Level> levelKey() {
         return levelKey;
+    }
+
+    public MechanicsOwner owner() {
+        return owner;
     }
 
     public AssemblyPlot plot() {

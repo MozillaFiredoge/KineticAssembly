@@ -8,5 +8,6 @@ public enum MechanicsResultCode {
     STATIC_BODY,
     UNSUPPORTED,
     INVALID_ARGUMENT,
-    NATIVE_UNAVAILABLE
+    NATIVE_UNAVAILABLE,
+    FAILED
 }
