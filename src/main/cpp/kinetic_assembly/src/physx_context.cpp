@@ -1096,6 +1096,95 @@ bool PhysXContext::apply_impulse_at_point(
 #endif
 }
 
+bool PhysXContext::apply_force(std::uint64_t body_handle, double force_x, double force_y, double force_z) {
+#if KINETIC_ASSEMBLY_WITH_PHYSX
+    physx::PxRigidActor* body = from_handle<physx::PxRigidActor>(body_handle);
+    if (body == nullptr) {
+        return false;
+    }
+    physx::PxRigidDynamic* dynamic = body->is<physx::PxRigidDynamic>();
+    if (dynamic == nullptr) {
+        return false;
+    }
+    dynamic->addForce(
+        physx::PxVec3(
+            static_cast<physx::PxReal>(force_x),
+            static_cast<physx::PxReal>(force_y),
+            static_cast<physx::PxReal>(force_z)
+        ),
+        physx::PxForceMode::eFORCE,
+        true
+    );
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool PhysXContext::apply_torque(std::uint64_t body_handle, double torque_x, double torque_y, double torque_z) {
+#if KINETIC_ASSEMBLY_WITH_PHYSX
+    physx::PxRigidActor* body = from_handle<physx::PxRigidActor>(body_handle);
+    if (body == nullptr) {
+        return false;
+    }
+    physx::PxRigidDynamic* dynamic = body->is<physx::PxRigidDynamic>();
+    if (dynamic == nullptr) {
+        return false;
+    }
+    dynamic->addTorque(
+        physx::PxVec3(
+            static_cast<physx::PxReal>(torque_x),
+            static_cast<physx::PxReal>(torque_y),
+            static_cast<physx::PxReal>(torque_z)
+        ),
+        physx::PxForceMode::eFORCE,
+        true
+    );
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool PhysXContext::apply_force_at_point(
+    std::uint64_t body_handle,
+    double force_x,
+    double force_y,
+    double force_z,
+    double point_x,
+    double point_y,
+    double point_z
+) {
+#if KINETIC_ASSEMBLY_WITH_PHYSX
+    physx::PxRigidActor* body = from_handle<physx::PxRigidActor>(body_handle);
+    if (body == nullptr) {
+        return false;
+    }
+    physx::PxRigidDynamic* dynamic = body->is<physx::PxRigidDynamic>();
+    if (dynamic == nullptr) {
+        return false;
+    }
+    physx::PxRigidBodyExt::addForceAtPos(
+        *dynamic,
+        physx::PxVec3(
+            static_cast<physx::PxReal>(force_x),
+            static_cast<physx::PxReal>(force_y),
+            static_cast<physx::PxReal>(force_z)
+        ),
+        physx::PxVec3(
+            static_cast<physx::PxReal>(point_x),
+            static_cast<physx::PxReal>(point_y),
+            static_cast<physx::PxReal>(point_z)
+        ),
+        physx::PxForceMode::eFORCE,
+        true
+    );
+    return true;
+#else
+    return false;
+#endif
+}
+
 std::uint64_t PhysXContext::create_fixed_joint(
     WorldHandle world_handle,
     std::uint64_t first_body_handle,

@@ -6,6 +6,7 @@ The entry point is:
 
 ```java
 MechanicsApi mechanics = KineticAssembly.api();
+MechanicsCapabilities capabilities = mechanics.capabilities();
 MechanicsWorld world = mechanics.world(serverLevel);
 ```
 
@@ -21,10 +22,12 @@ The compile-time API artifact is described in `docs/api-artifacts.md`.
 
 ## Current Surface
 
-The first API slice supports server-side rigid dynamic boxes:
+The current API slice supports server-side rigid dynamic boxes, compound boxes,
+joints, impulses, forces, snapshots, and tick callbacks:
 
 ```java
 MechanicsBodySnapshot body = world.createDynamicBox(
+        MechanicsOwner.of("example_mod", "demo"),
         MechanicsBoxDefinition.gameplayDynamicBox(
                 new PhysicsPose(position, PhysicsQuaternion.IDENTITY),
                 new PhysicsVector(0.5D, 0.5D, 0.5D),
@@ -34,13 +37,16 @@ MechanicsBodySnapshot body = world.createDynamicBox(
 
 world.applyLinearImpulse(body.id(), new PhysicsVector(0.0D, 2.0D, 0.0D));
 world.applyAngularImpulse(body.id(), new PhysicsVector(0.0D, 1.0D, 0.0D));
+MechanicsResult<Void> force = world.applyForce(body.id(), new PhysicsVector(0.0D, 20.0D, 0.0D));
 Optional<MechanicsBodySnapshot> latest = world.snapshot(body.id());
 ```
 
 Available operations:
 
+- query runtime mechanics capabilities;
 - create a gameplay dynamic box;
 - create a gameplay dynamic box with a caller-supplied stable body id;
+- create boxes with an explicit `MechanicsOwner`;
 - create a fixed joint between two mechanics bodies;
 - create a distance joint between two mechanics bodies;
 - list mechanics-owned body snapshots in one `ServerLevel`;
@@ -49,8 +55,41 @@ Available operations:
 - set linear velocity;
 - set angular velocity;
 - apply linear and angular impulses;
+- apply continuous force, torque, and point force with `MechanicsResult` errors;
+- subscribe to mechanics tick phases;
 - remove the body;
 - remove a joint.
+
+## Capabilities And Results
+
+`MechanicsApi.capabilities()` reports which parts of the mechanics API are
+available in the current runtime. The current capability model is coarse:
+dynamic boxes, compound boxes, joints, impulses, and forces are available when
+the configured native backend is available; tick events are available as part
+of the Java runtime.
+
+Newer APIs return `MechanicsResult<T>` instead of a bare boolean. Callers should
+check `result.success()` and branch on `result.code()` for cases such as
+`NOT_FOUND`, `WRONG_LEVEL`, `STATIC_BODY`, `INVALID_ARGUMENT`, and
+`NATIVE_UNAVAILABLE`.
+
+## Tick Events
+
+External mods can register physics-phase callbacks:
+
+```java
+AutoCloseable subscription = KineticAssembly.api().addTickListener(
+        MechanicsTickPhase.AFTER_STEP,
+        context -> {
+            // Read snapshots or schedule higher-level simulation work here.
+        }
+);
+```
+
+`BEFORE_STEP` runs before KineticAssembly advances physics scenes for the
+server tick. `AFTER_STEP` runs after scene stepping and mechanics snapshot cache
+refresh, before debug/entity adapters sync. Listener exceptions are logged and
+do not abort the physics tick.
 
 ## Sandbox Commands
 
@@ -99,6 +138,7 @@ MechanicsBodySnapshot body = world.createDynamicBox(bodyId, definition);
 - stable `MechanicsBodyId`;
 - Minecraft level key;
 - body type and role;
+- explicit `MechanicsOwner`;
 - PhysX pose;
 - linear velocity as tracked by the current backend wrapper;
 - angular velocity as tracked by the current backend wrapper;
@@ -194,7 +234,7 @@ Aerodynamics, electromagnetics, vehicle logic, and RL experiments should couple
 through this mechanics layer instead of through native handles:
 
 - Aerodynamics can sample wind and call `applyLinearImpulse` and
-  `applyAngularImpulse`.
+  `applyAngularImpulse`, or apply continuous forces during `BEFORE_STEP`.
 - Electromagnetics can translate field force/torque probes into mechanics
   impulses or forces.
 - Vehicle code can own higher-level assemblies while KineticAssembly owns rigid body
@@ -204,9 +244,11 @@ through this mechanics layer instead of through native handles:
 
 ## Current Limits
 
-- The first API slice only exposes dynamic boxes.
+- The API still does not expose assembly creation from arbitrary block volumes.
 - `applyLinearImpulse` and `applyAngularImpulse` are native PhysX impulse calls
-  for the PhysX backend. They require a dynamic body and fail for static bodies.
+  for the PhysX backend. `applyForce`, `applyTorque`, and `applyForceAtPoint`
+  use PhysX force mode. These APIs require dynamic bodies and fail for static
+  or missing bodies.
 - Fixed joints currently preserve the two bodies' relative pose at creation time.
   The mechanics API also exposes a world-frame/world-anchor creation path that
   converts the frame to each body's local joint frame.

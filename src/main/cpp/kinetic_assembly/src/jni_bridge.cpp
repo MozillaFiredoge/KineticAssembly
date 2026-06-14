@@ -542,6 +542,60 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysX
     ) ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyForce(
+    JNIEnv*,
+    jclass,
+    jlong body_handle,
+    jdouble force_x,
+    jdouble force_y,
+    jdouble force_z
+) {
+    return kinetic_assembly::apply_force(
+        static_cast<std::uint64_t>(body_handle),
+        force_x,
+        force_y,
+        force_z
+    ) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyTorque(
+    JNIEnv*,
+    jclass,
+    jlong body_handle,
+    jdouble torque_x,
+    jdouble torque_y,
+    jdouble torque_z
+) {
+    return kinetic_assembly::apply_torque(
+        static_cast<std::uint64_t>(body_handle),
+        torque_x,
+        torque_y,
+        torque_z
+    ) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyForceAtPoint(
+    JNIEnv*,
+    jclass,
+    jlong body_handle,
+    jdouble force_x,
+    jdouble force_y,
+    jdouble force_z,
+    jdouble point_x,
+    jdouble point_y,
+    jdouble point_z
+) {
+    return kinetic_assembly::apply_force_at_point(
+        static_cast<std::uint64_t>(body_handle),
+        force_x,
+        force_y,
+        force_z,
+        point_x,
+        point_y,
+        point_z
+    ) ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
     JNIEnv*,
     jclass,

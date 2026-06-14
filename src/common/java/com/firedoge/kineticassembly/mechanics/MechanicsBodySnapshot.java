@@ -13,6 +13,7 @@ public record MechanicsBodySnapshot(
         ResourceKey<Level> levelKey,
         MechanicsBodyType type,
         MechanicsBodyRole role,
+        MechanicsOwner owner,
         PhysicsPose pose,
         PhysicsVector linearVelocity,
         PhysicsVector angularVelocity,
@@ -25,6 +26,7 @@ public record MechanicsBodySnapshot(
         Objects.requireNonNull(levelKey, "levelKey");
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(role, "role");
+        Objects.requireNonNull(owner, "owner");
         Objects.requireNonNull(pose, "pose");
         Objects.requireNonNull(linearVelocity, "linearVelocity");
         Objects.requireNonNull(angularVelocity, "angularVelocity");

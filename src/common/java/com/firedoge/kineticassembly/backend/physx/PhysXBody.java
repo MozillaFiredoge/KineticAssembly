@@ -151,6 +151,45 @@ public final class PhysXBody implements PhysicsBody {
     }
 
     @Override
+    public boolean applyForce(PhysicsVector force) {
+        ensureOpen();
+        Objects.requireNonNull(force, "force");
+        if (nativeHandle == 0L || !PhysXNative.isLoaded()) {
+            return false;
+        }
+        return PhysXNative.applyForce(nativeHandle, force.x(), force.y(), force.z());
+    }
+
+    @Override
+    public boolean applyTorque(PhysicsVector torque) {
+        ensureOpen();
+        Objects.requireNonNull(torque, "torque");
+        if (nativeHandle == 0L || !PhysXNative.isLoaded()) {
+            return false;
+        }
+        return PhysXNative.applyTorque(nativeHandle, torque.x(), torque.y(), torque.z());
+    }
+
+    @Override
+    public boolean applyForceAtPoint(PhysicsVector force, PhysicsVector point) {
+        ensureOpen();
+        Objects.requireNonNull(force, "force");
+        Objects.requireNonNull(point, "point");
+        if (nativeHandle == 0L || !PhysXNative.isLoaded()) {
+            return false;
+        }
+        return PhysXNative.applyForceAtPoint(
+                nativeHandle,
+                force.x(),
+                force.y(),
+                force.z(),
+                point.x(),
+                point.y(),
+                point.z()
+        );
+    }
+
+    @Override
     public boolean isClosed() {
         return closed;
     }

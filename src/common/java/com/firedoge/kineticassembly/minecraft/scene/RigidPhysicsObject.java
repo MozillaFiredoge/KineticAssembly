@@ -80,6 +80,21 @@ final class RigidPhysicsObject implements PhysicsObject {
     }
 
     @Override
+    public boolean applyForce(PhysicsVector force) {
+        return body.applyForce(force);
+    }
+
+    @Override
+    public boolean applyTorque(PhysicsVector torque) {
+        return body.applyTorque(torque);
+    }
+
+    @Override
+    public boolean applyForceAtPoint(PhysicsVector force, PhysicsVector point) {
+        return body.applyForceAtPoint(force, point);
+    }
+
+    @Override
     public PhysicsObjectSnapshot snapshot() {
         return new PhysicsObjectSnapshot(id, type, pose(), linearVelocity(), angularVelocity(), closed);
     }

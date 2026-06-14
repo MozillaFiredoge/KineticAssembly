@@ -19,10 +19,30 @@ public interface MechanicsWorld {
         throw new UnsupportedOperationException("Stable body ids are not supported by this mechanics world");
     }
 
+    default MechanicsBodySnapshot createDynamicBox(MechanicsOwner owner, MechanicsBoxDefinition definition) {
+        return createDynamicBox(definition);
+    }
+
+    default MechanicsBodySnapshot createDynamicBox(MechanicsOwner owner, MechanicsBodyId id, MechanicsBoxDefinition definition) {
+        return createDynamicBox(id, definition);
+    }
+
     MechanicsBodySnapshot createDynamicCompoundBox(MechanicsCompoundBoxDefinition definition);
 
     default MechanicsBodySnapshot createDynamicCompoundBox(MechanicsBodyId id, MechanicsCompoundBoxDefinition definition) {
         throw new UnsupportedOperationException("Stable body ids are not supported by this mechanics world");
+    }
+
+    default MechanicsBodySnapshot createDynamicCompoundBox(MechanicsOwner owner, MechanicsCompoundBoxDefinition definition) {
+        return createDynamicCompoundBox(definition);
+    }
+
+    default MechanicsBodySnapshot createDynamicCompoundBox(
+            MechanicsOwner owner,
+            MechanicsBodyId id,
+            MechanicsCompoundBoxDefinition definition
+    ) {
+        return createDynamicCompoundBox(id, definition);
     }
 
     default MechanicsJointSnapshot createFixedJoint(MechanicsBodyId firstBodyId, MechanicsBodyId secondBodyId) {
@@ -304,6 +324,18 @@ public interface MechanicsWorld {
     boolean applyAngularImpulse(MechanicsBodyId id, PhysicsVector impulse);
 
     boolean applyImpulseAtPoint(MechanicsBodyId id, PhysicsVector impulse, PhysicsVector point);
+
+    default MechanicsResult<Void> applyForce(MechanicsBodyId id, PhysicsVector force) {
+        return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, "Forces are not supported by this mechanics world");
+    }
+
+    default MechanicsResult<Void> applyTorque(MechanicsBodyId id, PhysicsVector torque) {
+        return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, "Torques are not supported by this mechanics world");
+    }
+
+    default MechanicsResult<Void> applyForceAtPoint(MechanicsBodyId id, PhysicsVector force, PhysicsVector point) {
+        return MechanicsResult.failure(MechanicsResultCode.UNSUPPORTED, "Point forces are not supported by this mechanics world");
+    }
 
     boolean removeBody(MechanicsBodyId id);
 

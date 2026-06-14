@@ -50,6 +50,10 @@ point stub so dependent mods can compile against `KineticAssembly.api()`, but
 that stub is not a runtime implementation. Players and development runs still
 need the full NeoForge runtime mod.
 
+The public mechanics package now includes capability discovery, owner-tagged
+body creation, structured `MechanicsResult` failures, continuous force/torque
+entry points, and physics tick phase listeners.
+
 ## Consumer Example
 
 ```gradle
@@ -92,13 +96,9 @@ Minecraft and NeoForge types such as `ServerLevel` and `ResourceKey<Level>`.
 
 ## Not Yet Included
 
-The first API artifact intentionally does not include:
+The API artifact still does not include:
 
 - assembly creation from block volumes as a public API;
-- owner/mod-id isolation;
-- capability discovery;
-- force/torque accumulation APIs;
-- physics tick phase events;
 - raycast, overlap, or contact query APIs;
 - Fabric runtime support.
 

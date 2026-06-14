@@ -26,6 +26,12 @@ public interface PhysicsObject extends AutoCloseable {
 
     boolean applyImpulseAtPoint(PhysicsVector impulse, PhysicsVector point);
 
+    boolean applyForce(PhysicsVector force);
+
+    boolean applyTorque(PhysicsVector torque);
+
+    boolean applyForceAtPoint(PhysicsVector force, PhysicsVector point);
+
     PhysicsObjectSnapshot snapshot();
 
     boolean isClosed();

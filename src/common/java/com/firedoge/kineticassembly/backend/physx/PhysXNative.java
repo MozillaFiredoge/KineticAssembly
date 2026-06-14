@@ -8,6 +8,9 @@ public final class PhysXNative {
     private static volatile boolean linearImpulseNativeAvailable = true;
     private static volatile boolean angularImpulseNativeAvailable = true;
     private static volatile boolean pointImpulseNativeAvailable = true;
+    private static volatile boolean linearForceNativeAvailable = true;
+    private static volatile boolean torqueNativeAvailable = true;
+    private static volatile boolean pointForceNativeAvailable = true;
     private static volatile boolean bodyStateBatchNativeAvailable = true;
     private static volatile boolean fixedJointNativeAvailable = true;
     private static volatile boolean distanceJointNativeAvailable = true;
@@ -165,6 +168,20 @@ public final class PhysXNative {
             double pointZ
     );
 
+    static native boolean nativeApplyForce(long bodyHandle, double forceX, double forceY, double forceZ);
+
+    static native boolean nativeApplyTorque(long bodyHandle, double torqueX, double torqueY, double torqueZ);
+
+    static native boolean nativeApplyForceAtPoint(
+            long bodyHandle,
+            double forceX,
+            double forceY,
+            double forceZ,
+            double pointX,
+            double pointY,
+            double pointZ
+    );
+
     static native long nativeCreateFixedJoint(
             long worldHandle,
             long firstBodyHandle,
@@ -296,6 +313,50 @@ public final class PhysXNative {
             return nativeApplyImpulseAtPoint(bodyHandle, impulseX, impulseY, impulseZ, pointX, pointY, pointZ);
         } catch (UnsatisfiedLinkError error) {
             pointImpulseNativeAvailable = false;
+            return false;
+        }
+    }
+
+    static boolean applyForce(long bodyHandle, double forceX, double forceY, double forceZ) {
+        if (!linearForceNativeAvailable) {
+            return false;
+        }
+        try {
+            return nativeApplyForce(bodyHandle, forceX, forceY, forceZ);
+        } catch (UnsatisfiedLinkError error) {
+            linearForceNativeAvailable = false;
+            return false;
+        }
+    }
+
+    static boolean applyTorque(long bodyHandle, double torqueX, double torqueY, double torqueZ) {
+        if (!torqueNativeAvailable) {
+            return false;
+        }
+        try {
+            return nativeApplyTorque(bodyHandle, torqueX, torqueY, torqueZ);
+        } catch (UnsatisfiedLinkError error) {
+            torqueNativeAvailable = false;
+            return false;
+        }
+    }
+
+    static boolean applyForceAtPoint(
+            long bodyHandle,
+            double forceX,
+            double forceY,
+            double forceZ,
+            double pointX,
+            double pointY,
+            double pointZ
+    ) {
+        if (!pointForceNativeAvailable) {
+            return false;
+        }
+        try {
+            return nativeApplyForceAtPoint(bodyHandle, forceX, forceY, forceZ, pointX, pointY, pointZ);
+        } catch (UnsatisfiedLinkError error) {
+            pointForceNativeAvailable = false;
             return false;
         }
     }

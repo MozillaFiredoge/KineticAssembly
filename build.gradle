@@ -37,10 +37,17 @@ def publicApiSourcePaths = [
         'com/firedoge/kineticassembly/mechanics/MechanicsBodySnapshot.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsBodyType.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsBoxDefinition.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsCapabilities.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsCompoundBoxDefinition.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsJointId.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsJointSnapshot.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsJointType.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsOwner.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsResult.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsResultCode.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsTickContext.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsTickListener.java',
+        'com/firedoge/kineticassembly/mechanics/MechanicsTickPhase.java',
         'com/firedoge/kineticassembly/mechanics/MechanicsWorld.java'
 ]
 versionedJavaOverlayDirs.findAll { it.exists() }.each { overlayDir ->

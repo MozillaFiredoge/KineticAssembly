@@ -69,6 +69,9 @@ public:
     static bool apply_linear_impulse(std::uint64_t body, double impulse_x, double impulse_y, double impulse_z);
     static bool apply_angular_impulse(std::uint64_t body, double impulse_x, double impulse_y, double impulse_z);
     static bool apply_impulse_at_point(std::uint64_t body, double impulse_x, double impulse_y, double impulse_z, double point_x, double point_y, double point_z);
+    static bool apply_force(std::uint64_t body, double force_x, double force_y, double force_z);
+    static bool apply_torque(std::uint64_t body, double torque_x, double torque_y, double torque_z);
+    static bool apply_force_at_point(std::uint64_t body, double force_x, double force_y, double force_z, double point_x, double point_y, double point_z);
     std::uint64_t create_fixed_joint(WorldHandle world, std::uint64_t first_body, std::uint64_t second_body, bool collide_connected, float break_force, float break_torque);
     std::uint64_t create_fixed_joint_with_local_frames(WorldHandle world, std::uint64_t first_body, std::uint64_t second_body, const double* local_frames, bool collide_connected, float break_force, float break_torque);
     std::uint64_t create_distance_joint(WorldHandle world, std::uint64_t first_body, std::uint64_t second_body, float min_distance, float max_distance, float stiffness, float damping, bool collide_connected, float break_force, float break_torque);

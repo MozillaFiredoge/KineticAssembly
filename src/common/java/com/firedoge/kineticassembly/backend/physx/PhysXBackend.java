@@ -16,7 +16,12 @@ public final class PhysXBackend implements PhysicsBackend {
 
     @Override
     public boolean isAvailable() {
-        return PhysXNative.isPhysXLinked();
+        try {
+            PhysXNative.load();
+            return PhysXNative.isPhysXLinked();
+        } catch (RuntimeException | UnsatisfiedLinkError error) {
+            return false;
+        }
     }
 
     @Override

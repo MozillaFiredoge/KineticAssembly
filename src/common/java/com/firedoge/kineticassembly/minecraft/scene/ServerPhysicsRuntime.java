@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -30,11 +31,18 @@ import com.firedoge.kineticassembly.mechanics.MechanicsBodyRole;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodySnapshot;
 import com.firedoge.kineticassembly.mechanics.MechanicsBodyType;
 import com.firedoge.kineticassembly.mechanics.MechanicsBoxDefinition;
+import com.firedoge.kineticassembly.mechanics.MechanicsCapabilities;
 import com.firedoge.kineticassembly.mechanics.MechanicsCompoundBoxDefinition;
 import com.firedoge.kineticassembly.mechanics.MechanicsDebugProxy;
 import com.firedoge.kineticassembly.mechanics.MechanicsJointId;
 import com.firedoge.kineticassembly.mechanics.MechanicsJointSnapshot;
 import com.firedoge.kineticassembly.mechanics.MechanicsJointType;
+import com.firedoge.kineticassembly.mechanics.MechanicsOwner;
+import com.firedoge.kineticassembly.mechanics.MechanicsResult;
+import com.firedoge.kineticassembly.mechanics.MechanicsResultCode;
+import com.firedoge.kineticassembly.mechanics.MechanicsTickContext;
+import com.firedoge.kineticassembly.mechanics.MechanicsTickListener;
+import com.firedoge.kineticassembly.mechanics.MechanicsTickPhase;
 import com.firedoge.kineticassembly.physics.PhysicsManager;
 import com.firedoge.kineticassembly.platform.PlatformServices;
 import com.mojang.math.Transformation;
@@ -81,6 +89,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
     private final Set<PhysicsJointId> removedMechanicsJointIds = new LinkedHashSet<>();
     private final Map<PhysicsObjectId, PhysicsPose> mechanicsPoseCache = new LinkedHashMap<>();
     private final Map<PhysicsObjectId, MechanicsBodySnapshot> mechanicsSnapshotCache = new LinkedHashMap<>();
+    private final Map<MechanicsTickPhase, List<MechanicsTickListener>> mechanicsTickListeners = new EnumMap<>(MechanicsTickPhase.class);
     private final Map<String, Map<Long, TerrainCollider>> terrainColliders = new LinkedHashMap<>();
     private final Map<String, Map<Long, Set<Long>>> terrainChunks = new LinkedHashMap<>();
     private final Map<String, LinkedHashSet<Long>> terrainBuildQueues = new LinkedHashMap<>();
@@ -116,6 +125,40 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
     private ServerPhysicsRuntime() {
     }
 
+    public synchronized MechanicsCapabilities mechanicsCapabilities() {
+        PhysicsRuntimeConfig runtimeConfig = runtimeConfig();
+        boolean nativeLinked = PhysicsManager.INSTANCE.backend(runtimeConfig.defaultBackend())
+                .map(PhysicsBackend::isAvailable)
+                .orElse(false);
+        return new MechanicsCapabilities(
+                nativeLinked,
+                nativeLinked,
+                nativeLinked,
+                nativeLinked,
+                nativeLinked,
+                nativeLinked,
+                true
+        );
+    }
+
+    public synchronized AutoCloseable addMechanicsTickListener(MechanicsTickPhase phase, MechanicsTickListener listener) {
+        Objects.requireNonNull(phase, "phase");
+        Objects.requireNonNull(listener, "listener");
+        mechanicsTickListeners.computeIfAbsent(phase, ignored -> new ArrayList<>()).add(listener);
+        return () -> {
+            synchronized (ServerPhysicsRuntime.this) {
+                List<MechanicsTickListener> listeners = mechanicsTickListeners.get(phase);
+                if (listeners == null) {
+                    return;
+                }
+                listeners.remove(listener);
+                if (listeners.isEmpty()) {
+                    mechanicsTickListeners.remove(phase);
+                }
+            }
+        };
+    }
+
     public synchronized ServerPhysicsScene sceneFor(ServerLevel level) {
         Objects.requireNonNull(level, "level");
         String sceneKey = sceneKey(level);
@@ -141,12 +184,14 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
 
     public synchronized void tick(MinecraftServer server) {
         Objects.requireNonNull(server, "server");
+        long tickStart = System.nanoTime();
+        dispatchMechanicsTick(server, MechanicsTickPhase.BEFORE_STEP);
         if (states.isEmpty()) {
             clearLastTickProfiling();
+            dispatchMechanicsTick(server, MechanicsTickPhase.AFTER_STEP);
             return;
         }
 
-        long tickStart = System.nanoTime();
         long queueStart = tickStart;
         ActiveObjectTerrainQueueResult activeQueueResult = queueTerrainAroundActiveObjects(server);
         lastQueueActiveNanos = System.nanoTime() - queueStart;
@@ -165,6 +210,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
         }
         refreshMechanicsStateCache();
         lastStepPhaseNanos = System.nanoTime() - stepStart;
+        dispatchMechanicsTick(server, MechanicsTickPhase.AFTER_STEP);
 
         long syncStart = System.nanoTime();
         EntitySyncResult entitySyncResult = syncBoundEntities(server);
@@ -320,7 +366,15 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
     }
 
     public synchronized MechanicsBodySnapshot createMechanicsDynamicBox(ServerLevel level, MechanicsBoxDefinition definition) {
-        return createMechanicsDynamicBox(level, mechanicsBodyId(PhysicsObjectId.random()), definition);
+        return createMechanicsDynamicBox(level, MechanicsOwner.UNSPECIFIED, definition);
+    }
+
+    public synchronized MechanicsBodySnapshot createMechanicsDynamicBox(
+            ServerLevel level,
+            MechanicsOwner owner,
+            MechanicsBoxDefinition definition
+    ) {
+        return createMechanicsDynamicBox(level, owner, mechanicsBodyId(PhysicsObjectId.random()), definition);
     }
 
     public synchronized MechanicsBodySnapshot createMechanicsDynamicBox(
@@ -328,7 +382,17 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
             MechanicsBodyId id,
             MechanicsBoxDefinition definition
     ) {
+        return createMechanicsDynamicBox(level, MechanicsOwner.UNSPECIFIED, id, definition);
+    }
+
+    public synchronized MechanicsBodySnapshot createMechanicsDynamicBox(
+            ServerLevel level,
+            MechanicsOwner owner,
+            MechanicsBodyId id,
+            MechanicsBoxDefinition definition
+    ) {
         Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(owner, "owner");
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(definition, "definition");
         PhysicsVector halfExtents = definition.halfExtents();
@@ -346,6 +410,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
                 level.dimension(),
                 MechanicsBodyType.DYNAMIC_BOX,
                 definition.role(),
+                owner,
                 halfExtents,
                 definition.mass()
         );
@@ -354,7 +419,15 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
     }
 
     public synchronized MechanicsBodySnapshot createMechanicsDynamicCompoundBox(ServerLevel level, MechanicsCompoundBoxDefinition definition) {
-        return createMechanicsDynamicCompoundBox(level, mechanicsBodyId(PhysicsObjectId.random()), definition);
+        return createMechanicsDynamicCompoundBox(level, MechanicsOwner.UNSPECIFIED, definition);
+    }
+
+    public synchronized MechanicsBodySnapshot createMechanicsDynamicCompoundBox(
+            ServerLevel level,
+            MechanicsOwner owner,
+            MechanicsCompoundBoxDefinition definition
+    ) {
+        return createMechanicsDynamicCompoundBox(level, owner, mechanicsBodyId(PhysicsObjectId.random()), definition);
     }
 
     public synchronized MechanicsBodySnapshot createMechanicsDynamicCompoundBox(
@@ -362,7 +435,17 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
             MechanicsBodyId id,
             MechanicsCompoundBoxDefinition definition
     ) {
+        return createMechanicsDynamicCompoundBox(level, MechanicsOwner.UNSPECIFIED, id, definition);
+    }
+
+    public synchronized MechanicsBodySnapshot createMechanicsDynamicCompoundBox(
+            ServerLevel level,
+            MechanicsOwner owner,
+            MechanicsBodyId id,
+            MechanicsCompoundBoxDefinition definition
+    ) {
         Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(owner, "owner");
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(definition, "definition");
         List<PhysicsBoxCollider> boxes = definition.boxes();
@@ -375,6 +458,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
                 level.dimension(),
                 MechanicsBodyType.DYNAMIC_COMPOUND_BOX,
                 definition.role(),
+                owner,
                 definition.halfExtents(),
                 definition.mass()
         );
@@ -1104,6 +1188,79 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
         return applied;
     }
 
+    public synchronized MechanicsResult<Void> applyMechanicsForce(ServerLevel level, MechanicsBodyId id, PhysicsVector force) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(force, "force");
+        MechanicsResult<Void> validation = validateMechanicsVector(force, "force");
+        if (!validation.success()) {
+            return validation;
+        }
+        PhysicsObjectId objectId = physicsObjectId(id);
+        MechanicsResult<PhysicsObject> object = mechanicsDynamicObject(level, id);
+        if (!object.success()) {
+            return MechanicsResult.failure(object.code(), object.message());
+        }
+        boolean applied = object.value().orElseThrow().applyForce(force);
+        if (!applied) {
+            return MechanicsResult.failure(MechanicsResultCode.NATIVE_UNAVAILABLE, "Native backend did not accept the force");
+        }
+        mechanicsSnapshotCache.remove(objectId);
+        return MechanicsResult.ok();
+    }
+
+    public synchronized MechanicsResult<Void> applyMechanicsTorque(ServerLevel level, MechanicsBodyId id, PhysicsVector torque) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(torque, "torque");
+        MechanicsResult<Void> validation = validateMechanicsVector(torque, "torque");
+        if (!validation.success()) {
+            return validation;
+        }
+        PhysicsObjectId objectId = physicsObjectId(id);
+        MechanicsResult<PhysicsObject> object = mechanicsDynamicObject(level, id);
+        if (!object.success()) {
+            return MechanicsResult.failure(object.code(), object.message());
+        }
+        boolean applied = object.value().orElseThrow().applyTorque(torque);
+        if (!applied) {
+            return MechanicsResult.failure(MechanicsResultCode.NATIVE_UNAVAILABLE, "Native backend did not accept the torque");
+        }
+        mechanicsSnapshotCache.remove(objectId);
+        return MechanicsResult.ok();
+    }
+
+    public synchronized MechanicsResult<Void> applyMechanicsForceAtPoint(
+            ServerLevel level,
+            MechanicsBodyId id,
+            PhysicsVector force,
+            PhysicsVector point
+    ) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(force, "force");
+        Objects.requireNonNull(point, "point");
+        MechanicsResult<Void> forceValidation = validateMechanicsVector(force, "force");
+        if (!forceValidation.success()) {
+            return forceValidation;
+        }
+        MechanicsResult<Void> pointValidation = validateMechanicsVector(point, "point");
+        if (!pointValidation.success()) {
+            return pointValidation;
+        }
+        PhysicsObjectId objectId = physicsObjectId(id);
+        MechanicsResult<PhysicsObject> object = mechanicsDynamicObject(level, id);
+        if (!object.success()) {
+            return MechanicsResult.failure(object.code(), object.message());
+        }
+        boolean applied = object.value().orElseThrow().applyForceAtPoint(force, point);
+        if (!applied) {
+            return MechanicsResult.failure(MechanicsResultCode.NATIVE_UNAVAILABLE, "Native backend did not accept the point force");
+        }
+        mechanicsSnapshotCache.remove(objectId);
+        return MechanicsResult.ok();
+    }
+
     public synchronized boolean removeMechanicsBody(ServerLevel level, MechanicsBodyId id) {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(id, "id");
@@ -1416,6 +1573,36 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
             forgetMechanicsBody(objectId);
         }
         return object;
+    }
+
+    private MechanicsResult<PhysicsObject> mechanicsDynamicObject(ServerLevel level, MechanicsBodyId id) {
+        PhysicsObjectId objectId = physicsObjectId(id);
+        MechanicsBodyMetadata metadata = mechanicsBodies.get(objectId);
+        if (metadata == null) {
+            return MechanicsResult.failure(MechanicsResultCode.NOT_FOUND, "Mechanics body does not exist");
+        }
+        if (!metadata.levelKey().equals(level.dimension())) {
+            return MechanicsResult.failure(MechanicsResultCode.WRONG_LEVEL, "Mechanics body belongs to a different level");
+        }
+        if (metadata.mass() <= 0.0F) {
+            return MechanicsResult.failure(MechanicsResultCode.STATIC_BODY, "Mechanics body is not dynamic");
+        }
+        SceneState state = states.get(metadata.sceneKey());
+        if (state == null || state.scene().isClosed()) {
+            forgetMechanicsBody(objectId);
+            return MechanicsResult.failure(MechanicsResultCode.CLOSED, "Physics scene is closed");
+        }
+        Optional<PhysicsObject> object = state.scene().object(objectId);
+        if (object.isEmpty()) {
+            forgetMechanicsBody(objectId);
+            return MechanicsResult.failure(MechanicsResultCode.NOT_FOUND, "Mechanics body is missing from the physics scene");
+        }
+        PhysicsObject physicsObject = object.get();
+        if (physicsObject.isClosed()) {
+            forgetMechanicsBody(objectId);
+            return MechanicsResult.failure(MechanicsResultCode.CLOSED, "Mechanics body is closed");
+        }
+        return MechanicsResult.ok(physicsObject);
     }
 
     private void refreshMechanicsStateCache() {
@@ -1755,6 +1942,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
                 metadata.levelKey(),
                 metadata.type(),
                 metadata.role(),
+                metadata.owner(),
                 snapshot.pose(),
                 snapshot.linearVelocity(),
                 snapshot.angularVelocity(),
@@ -1900,6 +2088,29 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
 
     private static PhysicsRuntimeConfig runtimeConfig() {
         return PlatformServices.services().config();
+    }
+
+    private static MechanicsResult<Void> validateMechanicsVector(PhysicsVector vector, String name) {
+        Objects.requireNonNull(vector, name);
+        if (!Double.isFinite(vector.x()) || !Double.isFinite(vector.y()) || !Double.isFinite(vector.z())) {
+            return MechanicsResult.failure(MechanicsResultCode.INVALID_ARGUMENT, name + " must be finite");
+        }
+        return MechanicsResult.ok();
+    }
+
+    private void dispatchMechanicsTick(MinecraftServer server, MechanicsTickPhase phase) {
+        List<MechanicsTickListener> listeners = mechanicsTickListeners.get(phase);
+        if (listeners == null || listeners.isEmpty()) {
+            return;
+        }
+        MechanicsTickContext context = new MechanicsTickContext(server, phase, (float) PHYSICS_TICK_SECONDS);
+        for (MechanicsTickListener listener : List.copyOf(listeners)) {
+            try {
+                listener.onMechanicsTick(context);
+            } catch (RuntimeException exception) {
+                KineticAssembly.LOGGER.error("Mechanics tick listener failed during {}", phase, exception);
+            }
+        }
     }
 
     private void clearLastTickProfiling() {
@@ -3018,6 +3229,7 @@ public final class ServerPhysicsRuntime implements AutoCloseable {
             ResourceKey<Level> levelKey,
             MechanicsBodyType type,
             MechanicsBodyRole role,
+            MechanicsOwner owner,
             PhysicsVector halfExtents,
             float mass
     ) {

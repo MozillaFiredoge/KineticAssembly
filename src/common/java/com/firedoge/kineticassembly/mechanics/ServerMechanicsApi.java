@@ -19,6 +19,11 @@ public final class ServerMechanicsApi implements MechanicsApi {
     }
 
     @Override
+    public MechanicsCapabilities capabilities() {
+        return ServerPhysicsRuntime.INSTANCE.mechanicsCapabilities();
+    }
+
+    @Override
     public MechanicsWorld world(ServerLevel level) {
         Objects.requireNonNull(level, "level");
         ServerPhysicsRuntime.INSTANCE.sceneFor(level);
@@ -30,6 +35,11 @@ public final class ServerMechanicsApi implements MechanicsApi {
         Objects.requireNonNull(level, "level");
         return ServerPhysicsRuntime.INSTANCE.existingScene(level)
                 .map(ignored -> new RuntimeMechanicsWorld(level));
+    }
+
+    @Override
+    public AutoCloseable addTickListener(MechanicsTickPhase phase, MechanicsTickListener listener) {
+        return ServerPhysicsRuntime.INSTANCE.addMechanicsTickListener(phase, listener);
     }
 
     private record RuntimeMechanicsWorld(ServerLevel level) implements MechanicsWorld {
@@ -53,6 +63,16 @@ public final class ServerMechanicsApi implements MechanicsApi {
         }
 
         @Override
+        public MechanicsBodySnapshot createDynamicBox(MechanicsOwner owner, MechanicsBoxDefinition definition) {
+            return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicBox(level, owner, definition);
+        }
+
+        @Override
+        public MechanicsBodySnapshot createDynamicBox(MechanicsOwner owner, MechanicsBodyId id, MechanicsBoxDefinition definition) {
+            return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicBox(level, owner, id, definition);
+        }
+
+        @Override
         public MechanicsBodySnapshot createDynamicCompoundBox(MechanicsCompoundBoxDefinition definition) {
             return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicCompoundBox(level, definition);
         }
@@ -60,6 +80,20 @@ public final class ServerMechanicsApi implements MechanicsApi {
         @Override
         public MechanicsBodySnapshot createDynamicCompoundBox(MechanicsBodyId id, MechanicsCompoundBoxDefinition definition) {
             return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicCompoundBox(level, id, definition);
+        }
+
+        @Override
+        public MechanicsBodySnapshot createDynamicCompoundBox(MechanicsOwner owner, MechanicsCompoundBoxDefinition definition) {
+            return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicCompoundBox(level, owner, definition);
+        }
+
+        @Override
+        public MechanicsBodySnapshot createDynamicCompoundBox(
+                MechanicsOwner owner,
+                MechanicsBodyId id,
+                MechanicsCompoundBoxDefinition definition
+        ) {
+            return ServerPhysicsRuntime.INSTANCE.createMechanicsDynamicCompoundBox(level, owner, id, definition);
         }
 
         @Override
@@ -216,6 +250,21 @@ public final class ServerMechanicsApi implements MechanicsApi {
         @Override
         public boolean applyImpulseAtPoint(MechanicsBodyId id, PhysicsVector impulse, PhysicsVector point) {
             return ServerPhysicsRuntime.INSTANCE.applyMechanicsImpulseAtPoint(level, id, impulse, point);
+        }
+
+        @Override
+        public MechanicsResult<Void> applyForce(MechanicsBodyId id, PhysicsVector force) {
+            return ServerPhysicsRuntime.INSTANCE.applyMechanicsForce(level, id, force);
+        }
+
+        @Override
+        public MechanicsResult<Void> applyTorque(MechanicsBodyId id, PhysicsVector torque) {
+            return ServerPhysicsRuntime.INSTANCE.applyMechanicsTorque(level, id, torque);
+        }
+
+        @Override
+        public MechanicsResult<Void> applyForceAtPoint(MechanicsBodyId id, PhysicsVector force, PhysicsVector point) {
+            return ServerPhysicsRuntime.INSTANCE.applyMechanicsForceAtPoint(level, id, force, point);
         }
 
         @Override

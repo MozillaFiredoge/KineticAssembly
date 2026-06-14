@@ -253,6 +253,18 @@ bool apply_impulse_at_point(std::uint64_t body, double impulse_x, double impulse
     return PhysXContext::apply_impulse_at_point(body, impulse_x, impulse_y, impulse_z, point_x, point_y, point_z);
 }
 
+bool apply_force(std::uint64_t body, double force_x, double force_y, double force_z) {
+    return PhysXContext::apply_force(body, force_x, force_y, force_z);
+}
+
+bool apply_torque(std::uint64_t body, double torque_x, double torque_y, double torque_z) {
+    return PhysXContext::apply_torque(body, torque_x, torque_y, torque_z);
+}
+
+bool apply_force_at_point(std::uint64_t body, double force_x, double force_y, double force_z, double point_x, double point_y, double point_z) {
+    return PhysXContext::apply_force_at_point(body, force_x, force_y, force_z, point_x, point_y, point_z);
+}
+
 std::uint64_t create_fixed_joint(
     WorldHandle world,
     std::uint64_t first_body,

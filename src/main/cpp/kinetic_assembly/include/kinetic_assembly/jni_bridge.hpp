@@ -260,6 +260,36 @@ JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysX
     jdouble point_z
 );
 
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyForce(
+    JNIEnv* env,
+    jclass type,
+    jlong body_handle,
+    jdouble force_x,
+    jdouble force_y,
+    jdouble force_z
+);
+
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyTorque(
+    JNIEnv* env,
+    jclass type,
+    jlong body_handle,
+    jdouble torque_x,
+    jdouble torque_y,
+    jdouble torque_z
+);
+
+JNIEXPORT jboolean JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeApplyForceAtPoint(
+    JNIEnv* env,
+    jclass type,
+    jlong body_handle,
+    jdouble force_x,
+    jdouble force_y,
+    jdouble force_z,
+    jdouble point_x,
+    jdouble point_y,
+    jdouble point_z
+);
+
 JNIEXPORT jlong JNICALL Java_com_firedoge_kineticassembly_backend_physx_PhysXNative_nativeCreateFixedJoint(
     JNIEnv* env,
     jclass type,
